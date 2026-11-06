@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Track Resource Finder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">⚡</span>
+      <div>
+        <h1>Track Resource Finder</h1>
+        <p class="sub">GreatUniHack 2026 · paste a track, get APIs, repos, datasets &amp; papers</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <input id="who" class="who" placeholder="Your name" maxlength="40" title="Shown on pins you add" />
+      <button id="btn-bulk" class="ghost">Bulk paste tracks</button>
+      <button id="btn-add" class="primary">+ New track</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <input id="filter" class="filter" placeholder="Filter tracks…" />
+      <nav id="track-list"></nav>
+      <div id="gh-warning" class="warning" hidden>
+        No <code>GITHUB_TOKEN</code> set — GitHub search is limited to 10 req/min. Add one to <code>.env</code>.
+      </div>
+    </aside>
+
+    <main id="main">
+      <div class="empty">Pick a track on the left, or add the real ones when they're announced.</div>
+    </main>
+  </div>
+
+  <dialog id="dlg-add">
+    <form method="dialog" id="form-add">
+      <h2>New track</h2>
+      <label>Name<input name="name" required placeholder="e.g. Best use of AI for sustainability" /></label>
+      <label>Description <span class="muted">(paste the brief — keywords are pulled from it)</span>
+        <textarea name="description" rows="7" placeholder="Paste the challenge description…"></textarea>
+      </label>
+      <label>Search query <span class="muted">(optional, auto-generated if blank)</span><input name="query" /></label>
+      <div class="row end">
+        <button value="cancel" formnovalidate class="ghost">Cancel</button>
+        <button value="ok" class="primary">Add &amp; fetch</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-bulk">
+    <form method="dialog" id="form-bulk">
+      <h2>Bulk paste tracks</h2>
+      <p class="muted">One track per block, separated by a blank line. First line = name, remaining lines = description.</p>
+      <textarea name="text" rows="14" placeholder="Sponsor Track: Best FinTech Hack&#10;Build something that helps students manage money…&#10;&#10;Track 2: Healthcare&#10;Improve access to mental-health support…"></textarea>
+      <label class="check"><input type="checkbox" name="fetch" checked /> Fetch resources for every track right away</label>
+      <div class="row end">
+        <button value="cancel" formnovalidate class="ghost">Cancel</button>
+        <button value="ok" class="primary">Add tracks</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

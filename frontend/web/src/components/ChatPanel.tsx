@@ -2,9 +2,10 @@ import { Phone, Send, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { LANGUAGES, useChat, type Msg } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
+import { BOT_ABOUT, BOT_NAME } from '../lib/brand'
 import { Spinner } from './ui'
 
-const SUGGESTIONS = ['Can I afford £30 this week?', 'Which subscriptions could I cut?', 'Where does my money go?', 'What help can I get?']
+const SUGGESTIONS = ['I need to save money. Which subscription should I cancel?', 'Can I afford £20 this week?', 'How do I get to payday?', 'What help can I get?']
 const KIND = { knowledge: 'guidance', profile: 'your profile', account: 'your account', transactions: 'your transactions' } as Record<string, string>
 
 function Bubble({ m }: { m: Msg }) {
@@ -36,7 +37,7 @@ function Bubble({ m }: { m: Msg }) {
   )
 }
 
-export function ChatPanel() {
+export function ChatPanel({ tall = false }: { tall?: boolean }) {
   const { user } = useUser()
   const { messages, busy, ask, language, setLanguage, plain, setPlain } = useChat()
   const [text, setText] = useState('')
@@ -46,14 +47,14 @@ export function ChatPanel() {
 
   const send = (q: string) => { if (q.trim() && !busy) { setText(''); void ask(q) } }
   return (
-    <div className="card chat">
+    <div className={`card chat ${tall ? 'tall' : ''}`}>
       <div className="row between wrap">
-        <h3>Chat with Finance Buddy</h3>
+        <div><h3>Chat with {BOT_NAME}</h3><div className="tiny muted" style={{ maxWidth: 420 }}>{BOT_ABOUT}</div></div>
         <div className="row" style={{ gap: 8 }}>
           <select className="input" style={{ width: 'auto', padding: '6px 8px', fontSize: 13 }} value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Language">
             {LANGUAGES.map((l) => <option key={l}>{l}</option>)}
           </select>
-          <button className="btn secondary" onClick={() => window.dispatchEvent(new Event('fb:call'))} aria-label="Call Finance Buddy and talk"><Phone size={16} /> Call</button>
+          <button className="btn secondary" onClick={() => window.dispatchEvent(new Event('fb:call'))} aria-label={`Call ${BOT_NAME} and talk`}><Phone size={16} /> Call</button>
         </div>
       </div>
       <label className="row small muted" style={{ marginTop: 8 }}>
@@ -61,7 +62,7 @@ export function ChatPanel() {
       </label>
 
       <div className="chat-log" ref={logRef} role="log" aria-live="polite">
-        <div className="msg bot">Hi {user?.name.split(' ')[0] ?? 'there'}, I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?</div>
+        <div className="msg bot">Hi {user?.name.split(' ')[0] ?? 'there'}, I'm {BOT_NAME}. I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?</div>
         {visible.map((m) => <Bubble key={m.id} m={m} />)}
         {busy && <div className="msg bot"><span className="row"><Spinner /><span className="muted small">Thinking…</span></span></div>}
       </div>

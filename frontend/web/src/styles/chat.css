@@ -49,3 +49,9 @@
 .ctl button { width: 64px; height: 64px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.18); color: #fff; display: grid; place-items: center; }
 .ctl button[aria-pressed='true'] { background: #fff; color: #b3261e; }
 .ctl .end { background: #d93025; width: 72px; height: 72px; }
+
+.page.narrow { max-width: 760px; }
+.card.chat.tall .chat-log { min-height: 46vh; max-height: calc(100vh - 340px); }
+.warn-fold { margin: 16px 0 24px; }
+.warn-fold summary { cursor: pointer; font-weight: 600; color: var(--primary); padding: 8px 2px; }
+@media (max-width: 900px) { .card.chat.tall .chat-log { max-height: calc(100vh - 400px); } }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
+import { BOT_NAME } from '../lib/brand'
 import { firstName } from '../lib/format'
 import type { ProposedAction } from '../lib/types'
 
@@ -165,7 +166,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
       try { s.eleven = (await api.voiceStatus()).elevenlabs } catch { s.eleven = false }
       try { await openMic() } catch { return alive ? fail('I could not use the microphone. Allow it in the address bar and try again.') : undefined }
       if (!alive) return
-      await say(`Hi ${name.current}, it's Finance Buddy. What's on your mind?`)
+      await say(`Hi ${name.current}, it's ${BOT_NAME}. What's on your mind?`)
     })()
 
     return () => {
@@ -184,12 +185,12 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <div className="call" data-state={phase} role="dialog" aria-modal="true" aria-label="Call with Finance Buddy">
+    <div className="call" data-state={phase} role="dialog" aria-modal="true" aria-label={`Call with ${BOT_NAME}`}>
       <div>
-        <p className="who">Finance Buddy</p>
+        <p className="who">{BOT_NAME}</p>
         <p className="callstatus" aria-live="polite">{status}</p>
       </div>
-      <button ref={orb} className="orb" onClick={() => ctl.current.interrupt()} aria-label="Finance Buddy. Tap to interrupt while it is speaking" />
+      <button ref={orb} className="orb" onClick={() => ctl.current.interrupt()} aria-label={`${BOT_NAME}. Tap to interrupt while it is speaking`} />
       <div className="caps" aria-live="polite">
         <div className="you">{you}</div>
         <div className="bot">{bot}</div>

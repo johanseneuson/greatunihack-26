@@ -175,3 +175,28 @@ def test_applications_match_what_the_answer_is_about():
     assert [o["id"] for o in got] == ["uni_hardship"]
     assert [o["id"] for o in match_applications("ask about the council tax exemption certificate", opts)] == ["council_tax", ]
     assert match_applications("what is my balance", opts) == []
+
+
+def test_reset_subscriptions_switches_everything_back_on(client, user_with_data):
+    from app.db import SessionLocal
+    from app.models import User
+    from app.seed import add_subscriptions
+    uid = user_with_data["id"]
+    db = SessionLocal()
+    try:
+        add_subscriptions(db, db.get(User, uid), [("Netflix", 10.99, 3), ("Spotify Premium", 11.99, 9)])
+    finally:
+        db.close()
+    subs = [s for s in client.get(f"/api/users/{uid}/expenses").json()["subscriptions"] if s["name"] in ("Netflix", "Spotify Premium")]
+    assert len(subs) == 2
+    for s in subs:  # pause both, then a second pause of the same one is refused
+        assert client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": s["series_id"]}}).json()["ok"]
+    assert not client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": subs[0]["series_id"]}}).json()["ok"]
+    r = client.post(f"/api/users/{uid}/reset-subscriptions").json()
+    assert r == {"ok": True, "switched_back_on": 2}
+    after = {s["name"]: s for s in client.get(f"/api/users/{uid}/expenses").json()["subscriptions"]}
+    assert not after["Netflix"]["paused"] and not after["Spotify Premium"]["paused"]
+    # and they can be cancelled again
+    assert client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": after["Netflix"]["series_id"]}}).json()["ok"]
+    assert client.post(f"/api/users/{uid}/reset-subscriptions").json()["switched_back_on"] == 1
+    assert client.post(f"/api/users/{uid}/reset-subscriptions").json()["switched_back_on"] == 0  # nothing left to reset

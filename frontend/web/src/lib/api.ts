@@ -81,6 +81,7 @@ export const api = {
   action: (id: number, action: Record<string, unknown>) =>
     req<{ ok: boolean; message: string }>(`/users/${id}/actions`, json('POST', { action })),
   expenses: (id: number) => req<ExpensesData>(`/users/${id}/expenses`),
+  resetSubscriptions: (id: number) => req<{ ok: boolean; switched_back_on: number }>(`/users/${id}/reset-subscriptions`, json('POST', {})),
   support: (id: number) => req<SupportOption[]>(`/users/${id}/support`),
 
   // Call mode (voice)

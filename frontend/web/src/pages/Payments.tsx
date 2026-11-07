@@ -16,6 +16,7 @@ export default function Payments() {
   const [err, setErr] = useState<string | null>(null)
   const [form, setForm] = useState({ description: '', amount: '', date: '', essential: false })
   const [busy, setBusy] = useState(false)
+  const [resetMsg, setResetMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!user) return
@@ -37,6 +38,16 @@ export default function Payments() {
     e.preventDefault()
     const r = await run({ type: 'add_planned_expense', description: form.description, amount: Number(form.amount), date: form.date, essential: form.essential })
     if (r.ok) { setForm({ description: '', amount: '', date: '', essential: false }); setErr(null) } else setErr(r.message)
+  }
+
+  const resetAll = async () => {
+    if (!user) return
+    setBusy(true)
+    try {
+      const r = await api.resetSubscriptions(user.id)
+      setResetMsg(r.switched_back_on ? `${r.switched_back_on} switched back on.` : 'Everything was already on.')
+      await refresh()
+    } finally { setBusy(false) }
   }
 
   if (!data) return <div className="row" style={{ justifyContent: 'center', padding: 24 }}><Spinner /></div>
@@ -104,6 +115,10 @@ export default function Payments() {
               ))}
             </div>
           </Card>
+          <div className="row wrap">
+            <button className="btn secondary" disabled={busy} onClick={resetAll}>Reset subscriptions</button>
+            {resetMsg && <span className="small muted" role="status">{resetMsg}</span>}
+          </div>
           <p className="tiny muted">Pausing a subscription removes it from your upcoming payments and your forecast. You can also just ask the coach: "cancel my gym".</p>
         </>
       )}

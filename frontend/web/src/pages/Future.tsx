@@ -52,7 +52,6 @@ export default function Future({ d }: { d: Dashboard }) {
         capped: s.outflow > cap ? compact(s.outflow) : '',
         range: s.kind === 'forecast' && s.p10 != null && s.p90 != null
           ? [Math.max(0, s.outflow - s.p10), Math.max(0, Math.min(cap, s.p90) - s.outflow)] as [number, number] : undefined,
-        pay: s.payday ? '£' : '',
       })),
     }
   }, [w.series, months, d.overview.as_of])
@@ -114,7 +113,6 @@ export default function Future({ d }: { d: Dashboard }) {
               <Bar dataKey="shown" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {series.map((s, i) => <Cell key={s.kind + s.week_start} fill={color(s, i === hoveredWeek)} />)}
                 <LabelList dataKey="capped" position="insideTop" fill="#fff" fontSize={10} fontWeight={700} />
-                <LabelList dataKey="pay" position="top" fill="var(--success)" fontSize={11} fontWeight={800} offset={4} />
                 <ErrorBar dataKey="range" width={0} stroke="var(--primary)" strokeOpacity={0.3} />
               </Bar>
               <Line dataKey="baseline" type="stepAfter" dot={false} stroke="var(--secondary)" strokeWidth={1.5} strokeDasharray="3 3" isAnimationActive={false} />
@@ -127,7 +125,6 @@ export default function Future({ d }: { d: Dashboard }) {
           <span><i style={{ background: 'var(--primary-soft)' }} />Forecast</span>
           <span><i style={{ background: 'var(--ill-orange)' }} />Wave ahead</span>
           <span><i style={{ background: 'var(--primary)', opacity: 0.45, width: 3 }} />Likely range</span>
-          <span><strong className="pos" style={{ marginRight: 4 }}>£</strong>Payday</span>
           <span><i style={{ background: 'var(--secondary)' }} />Your normal level</span>
         </div>
       </Card>

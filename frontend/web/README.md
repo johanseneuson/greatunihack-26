@@ -1,6 +1,6 @@
-# NatWest - Web app
+# NatEast - Web app
 
-React + TypeScript + Vite front end for the NatWest API (`../../backend`). The look follows the NatWest
+React + TypeScript + Vite front end for the NatEast API (`../../backend`). The look follows the NatWest
 hackathon design kit (colours, cards, Newsfeed / Categories / Budgets tabs, bottom tab bar on mobile); the product,
 data and models are our own.
 

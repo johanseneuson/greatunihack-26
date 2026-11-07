@@ -32,6 +32,7 @@ QUALIFYING_EARNINGS_LOWER_YEAR = 6240  # lower limit of qualifying earnings used
 CATEGORY_LABEL = {
     "benefit": "Benefits", "council": "Council help", "bills": "Cheaper bills", "savings": "Savings boosts",
     "work": "From your employer", "debt": "Debt help", "student": "Student support", "health": "Health costs", "bank": "Your bank",
+    "visa": "Work & visa", "travel": "Travel discounts",
 }
 
 
@@ -62,6 +63,66 @@ def _item(id_, name, category, why, what, link, check="", checks=(), value=None,
     }
 
 
+def _student_options(ctx: UserContext, fc: dict, res: dict) -> list[dict]:
+    """International students on a Student visa have 'no recourse to public funds': no Universal Credit, Housing Benefit, Help to
+    Save or the social tariffs that depend on them. What they can usually do is below (rules differ by university and council)."""
+    u = ctx.user
+    who = "you guys" if u.address_as else "you"
+    local = "manchester" in (u.notes or "").lower()
+    risk = fc["prob_overdraft"]["30d"]
+    struggling = _met("Struggling to cover costs", f"{round(risk * 100)}% chance of going overdrawn in the next 30 days")
+    visa = _met("Studying in the UK on a Student visa", "From your profile")
+    out: list[dict] = []
+    out.append(_item(
+        "council_tax", "Council tax exemption for full-time students", "council",
+        f"{who.capitalize()} share a house and all study full time. If everyone in the house is a full-time student, you should not pay council tax.",
+        "Ask your university for a council tax certificate (proof of student status) and send it to the council. If any bill arrives, do not pay it before checking. Some councils ask international students for passport and visa details.",
+        "", "Check your own council's student exemption page (in Manchester: manchester.gov.uk)." if local else "",
+        checks=[visa, _unknown("Everyone in the house is a full-time student")], value="No council tax to pay", priority=95))
+    out.append(_item(
+        "student_work", "Part-time work allowed on your visa", "visa",
+        "Your part-time pay and money from family do not cover rent, bills and food between you.",
+        "A Student visa usually allows limited part-time work in term time (often up to 20 hours a week at degree level). Check your own visa conditions, and never go over the limit.",
+        "https://www.gov.uk/student-visa/work", checks=[visa, _unknown("The work limit printed on your visa")], priority=70,
+        link_label="Check your work rules"))
+    out.append(_item(
+        "uni_hardship", "Your university's hardship fund and money advice team", "student",
+        f"Your forecast shows a {round(risk * 100)}% chance of going overdrawn in the next 30 days and your savings from home are running out, so it is worth asking now, before you miss rent.",
+        "Most universities have a hardship fund and a free money or advice team, and many also run food support through the students' union. Hardship funds are not 'public funds', so international students can usually apply, but rules differ by university. Asking for help does not usually affect a visa; the advice team can confirm for your case.",
+        "https://www.ukcisa.org.uk/student-advice/finances/unexpected-financial-hardship/",
+        checks=[struggling, _met("Not a 'public fund'", "Usually open to students on visas"), _unknown("Your university's own criteria")],
+        priority=100, link_label="How hardship funds work"))
+    out.append(_item(
+        "council_crisis_fund", "Ask the council about the Crisis and Resilience Fund", "council",
+        f"With a {round(risk * 100)}% chance of going overdrawn soon, an emergency grant could stop a missed rent payment.",
+        "Government money (it replaced the Household Support Fund in April 2026) that councils give to people in a crisis for essentials. Councils decide who qualifies and rules for students on visas differ, so ask rather than assume no.",
+        "https://www.manchester.gov.uk/HSF" if local else "https://www.gov.uk/find-local-council",
+        "In Manchester the council also runs a Welfare Provision Scheme for essential needs." if local else "",
+        checks=[struggling, _unknown("Your council's rules for students on visas")], priority=85, link_label="See what your council offers"))
+    debt = _find(ctx, r"klarna|clearpay|loan|overdraft|finance|credit")
+    if debt or risk >= 0.5:
+        out.append(_item(
+            "debt_advice", "Free, confidential money advice (Citizens Advice)", "debt",
+            ("You are paying " + debt.name + f" ({gbp(debt.amount)} {debt.period}) and " if debt else "") + "using the overdraft most months.",
+            "Citizens Advice and the students' union advice service give free, confidential help with debts and budgeting and can explain what you can and cannot claim.",
+            "https://www.citizensadvice.org.uk", "Never pay for debt advice.",
+            checks=[_met("You have debt repayments", debt.name) if debt else struggling, _met("Free for everyone", "No eligibility rules for advice")],
+            priority=75, link_label="Get free advice"))
+    out.append(_item(
+        "bank_support", "Ask your bank for hardship support", "bank",
+        "You are likely to be overdrawn again soon.",
+        "Tell your bank you are struggling. UK banks have to treat customers in financial difficulty fairly, and can offer a payment plan, a lower overdraft limit or paused charges.",
+        "", checks=[struggling], priority=50))
+    out.append(_item(
+        "railcard", "16-25 Railcard (or student railcard)", "travel",
+        "You spend on travel every week.",
+        "Cheaper rail fares for 16 to 25 year olds and mature students. Worth it only if you take trains; buses and trams are not covered.",
+        "https://www.16-25railcard.co.uk", checks=[_met("You travel regularly"), _unknown("Aged 16 to 25, or a mature full-time student")],
+        value="A third off most rail fares", priority=40, link_label="See the railcard"))
+    out.sort(key=lambda o: -o["priority"])
+    return out
+
+
 def support_options(ctx: UserContext) -> list[dict]:
     """Programmes worth checking for this person, most useful first. Each has why (from their data), what, link, checks."""
     if not ctx.has_data:
@@ -77,6 +138,8 @@ def support_options(ctx: UserContext) -> list[dict]:
     res = ins.resilience(ctx) or {}
     overdraft_risk = fc["prob_overdraft"]["30d"]
     renting = (u.housing or "") in ("rent", "family")
+    if "no_recourse_to_public_funds" in (u.challenges or []):
+        return _student_options(ctx, fc, res)
     student = u.income_type == "student" or "student" in challenges or "student" in notes
     irregular = u.income_type in ("irregular", "mixed") or "irregular_income" in challenges
     working = u.income_type in ("salary", "irregular", "mixed") and income > 0

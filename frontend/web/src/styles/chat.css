@@ -55,3 +55,9 @@
 .warn-fold { margin: 16px 0 24px; }
 .warn-fold summary { cursor: pointer; font-weight: 600; color: var(--primary); padding: 8px 2px; }
 @media (max-width: 900px) { .card.chat.tall .chat-log { max-height: calc(100vh - 400px); } }
+
+.card.support { margin-bottom: 14px; }
+.support-list { display: flex; flex-direction: column; margin: 8px 0; }
+.support-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.support-item:first-child { border-top: none; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

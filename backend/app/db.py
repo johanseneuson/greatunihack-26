@@ -39,3 +39,8 @@ def init_db() -> None:
     from . import models  # noqa: F401  (register tables)
 
     Base.metadata.create_all(engine)
+    # tiny migration: databases created before `address_as` existed
+    with engine.begin() as conn:
+        cols = {r[1] for r in conn.exec_driver_sql('PRAGMA table_info(users)')} if engine.dialect.name == 'sqlite' else set()
+        if cols and 'address_as' not in cols:
+            conn.exec_driver_sql('ALTER TABLE users ADD COLUMN address_as VARCHAR(60)')

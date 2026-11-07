@@ -1,4 +1,4 @@
-# NatWest (hackathon project)
+# NatEast (hackathon project)
 
 Financial Navigator: An AI-Powered Financial Coach for Greater Financial Inclusion and Resilience . Mobile-first web app + FastAPI backend.
 

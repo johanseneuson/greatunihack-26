@@ -4,7 +4,7 @@ import { useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import { BOT_NAME } from '../lib/brand'
-import { firstName } from '../lib/format'
+import { callName } from '../lib/format'
 import { isNo, isYes, phrases } from '../lib/phrases'
 import type { ProposedAction } from '../lib/types'
 
@@ -29,7 +29,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
   const [pending, setPending] = useState<ProposedAction | null>(null)
   const orb = useRef<HTMLButtonElement>(null)
   const chatRef = useRef(chat); chatRef.current = chat
-  const name = useRef(user ? firstName(user.name) : 'there'); name.current = user ? firstName(user.name) : 'there'
+  const name = useRef(user ? callName(user) : 'there'); name.current = user ? callName(user) : 'there'
   const talkOverRef = useRef(true); talkOverRef.current = talkOver
   const ctl = useRef({ interrupt: () => { }, toggleMute: () => { }, yes: () => { }, no: () => { } })
 

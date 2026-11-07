@@ -1,7 +1,8 @@
 // Thin, platform-neutral API client (uses only fetch) - the Expo app can import this unchanged
 // by calling setApiBase('http://<laptop-ip>:8000/api').
 import type {
-  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, Debt, ExpensesData, Forecast, ForecastAccuracy, FutureSelfAnswer, Goal, Milestones, Opportunities, ImportResult, Recurring,
+  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, Debt, ExpensesData, Forecast, ForecastAccuracy, FutureSelfAnswer, Goal, ImportResult,
+  Milestones, Opportunities, Recurring, SupportOption,
   ScenarioResult, Transaction, User,
 } from './types'
 
@@ -21,7 +22,7 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
       headers: init.body instanceof FormData ? init.headers : { 'Content-Type': 'application/json', ...init.headers },
     })
   } catch {
-    throw new ApiError(0, "Can't reach the NatWest API. Is the backend running?")
+    throw new ApiError(0, "Can't reach the NatEast API. Is the backend running?")
   }
   if (!res.ok) {
     let msg = res.statusText
@@ -80,13 +81,14 @@ export const api = {
   action: (id: number, action: Record<string, unknown>) =>
     req<{ ok: boolean; message: string }>(`/users/${id}/actions`, json('POST', { action })),
   expenses: (id: number) => req<ExpensesData>(`/users/${id}/expenses`),
+  support: (id: number) => req<SupportOption[]>(`/users/${id}/support`),
 
   // Call mode (voice)
   voiceStatus: () => req<{ elevenlabs: boolean; voice_id: string }>('/voice/status'),
   speak: async (text: string, language: string): Promise<Blob> => {
     let res: Response
     try { res = await fetch(`${BASE}/voice/speak`, { ...json('POST', { text, language }), headers: { 'Content-Type': 'application/json' } }) }
-    catch { throw new ApiError(0, "Can't reach the NatWest API.") }
+    catch { throw new ApiError(0, "Can't reach the NatEast API.") }
     if (!res.ok) throw new ApiError(res.status, 'Voice unavailable')
     return res.blob()
   },

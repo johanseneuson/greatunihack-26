@@ -45,7 +45,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     reloadUsers()
       .then((list) => {
         if (!list.length) { setLoading(false); return }
-        setUserIdState((cur) => (cur && list.some((u) => u.id === cur) ? cur : (list.find((u) => u.email === 'maya@demo.financebuddy') ?? list[0]).id))
+        setUserIdState((cur) => (cur && list.some((u) => u.id === cur) ? cur : (list.find((u) => u.email === 'flat4@demo.nateast') ?? list[0]).id))
       })
       .catch((e) => { setError(e.message); setLoading(false) })
   }, [reloadUsers])

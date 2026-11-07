@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import { LANGUAGES, useChat, type Msg } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { BOT_ABOUT, BOT_NAME } from '../lib/brand'
+import { callName } from '../lib/format'
 import { phrases } from '../lib/phrases'
 import { Spinner } from './ui'
 
-const SUGGESTIONS = ['I need to save money. Which subscription should I cancel?', 'Can I afford £20 this week?', 'How do I get to payday?', 'What help can I get?']
+const SUGGESTIONS = ['What help can we get?', 'We need to cut a streaming service', 'Help us write to the hardship fund', 'Will we run out of money?']
 const KIND = { knowledge: 'guidance', profile: 'your profile', account: 'your account', transactions: 'your transactions' } as Record<string, string>
 
 const URL_RX = /(https?:\/\/[^\s)]+)/g
@@ -70,8 +71,8 @@ export function ChatPanel({ tall = false }: { tall?: boolean }) {
 
       <div className="chat-log" ref={logRef} role="log" aria-live="polite">
         <div className="msg bot">{language === 'English'
-          ? `Hi ${user?.name.split(' ')[0] ?? 'there'}, I'm ${BOT_NAME}. I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?`
-          : phrases(language).greet(user?.name.split(' ')[0] ?? '', BOT_NAME)}</div>
+          ? `Hi ${user ? callName(user) : 'there'}, I'm ${BOT_NAME}. I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?`
+          : phrases(language).greet(user ? callName(user) : '', BOT_NAME)}</div>
         {visible.map((m) => <Bubble key={m.id} m={m} />)}
         {busy && <div className="msg bot"><span className="row"><Spinner /><span className="muted small">Thinking…</span></span></div>}
       </div>

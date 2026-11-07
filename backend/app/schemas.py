@@ -19,6 +19,7 @@ class UserBase(BaseModel):
     savings_buffer_target: float | None = Field(None, ge=0)
     challenges: list[str] = Field(default_factory=list, examples=[["irregular_income", "debt", "new_baby"]])
     notes: str | None = Field(None, max_length=2000)
+    address_as: str | None = Field(None, max_length=60, description='How to address them, e.g. "guys" for a group')
 
 
 class UserCreate(UserBase):
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
     savings_buffer_target: float | None = None
     challenges: list[str] | None = None
     notes: str | None = None
+    address_as: str | None = None
 
 
 class UserOut(UserBase):

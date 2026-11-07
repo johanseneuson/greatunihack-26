@@ -10,7 +10,7 @@ import { OpportunityFinder } from '../components/OpportunityFinder'
 import { Card, Progress } from '../components/ui'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
-import { dayMonth, firstName, greeting, money, money0, signed0 } from '../lib/format'
+import { callName, dayMonth, greeting, money, money0, signed0 } from '../lib/format'
 import type { Account, Dashboard } from '../lib/types'
 
 export default function Home({ d }: { d: Dashboard }) {
@@ -41,7 +41,7 @@ export default function Home({ d }: { d: Dashboard }) {
             </span>
             <button className="icon-btn" aria-label="Profile and data" onClick={() => navigate('/profile')}><CircleUserRound size={26} /></button>
           </div>
-          <h1>{greeting()}, {firstName(o.user.name)}</h1>
+          <h1>{greeting()}, {callName(o.user)}</h1>
           <div className="pills">
             <button className={view === 'today' ? 'on' : ''} onClick={() => setView('today')}>Today</button>
             <button className={view === 'future' ? 'on' : ''} onClick={() => setView('future')}>Future you</button>

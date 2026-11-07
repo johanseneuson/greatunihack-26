@@ -121,3 +121,20 @@ def test_support_matches_the_persons_situation(client, user_with_data):
         assert "MAY suit" in doc and "never 'is eligible'" in doc
     finally:
         client.delete(f"/api/users/{u['id']}")
+
+
+def test_students_with_no_recourse_to_public_funds_are_not_sent_to_benefits(client):
+    from tests.conftest import synthetic_statement
+    from app.services.chat.support import support_options
+    u = client.post("/api/users", json={"name": "Flat 4", "address_as": "guys", "income_type": "student", "housing": "rent", "household_size": 4,
+                                        "challenges": ["no_recourse_to_public_funds"], "notes": "International students in Manchester."}).json()
+    try:
+        client.post(f"/api/users/{u['id']}/uploads", files={"file": ("s.csv", synthetic_statement(salary=900, rent=1400), "text/csv")})
+        ids = {o["id"] for o in support_options(_ctx_for(client, u["id"]))}
+        assert "uni_hardship" in ids and "council_tax" in ids and "council_crisis_fund" in ids
+        assert not ids & {"universal_credit", "help_to_save", "social_tariff", "warm_home_discount"}
+        assert client.get(f"/api/users/{u['id']}").json()["address_as"] == "guys"
+        r = client.post(f"/api/users/{u['id']}/chat", json={"messages": [{"role": "user", "content": "hi"}]}).json()
+        assert r["mode"] == "offline"
+    finally:
+        client.delete(f"/api/users/{u['id']}")

@@ -138,3 +138,20 @@ def test_students_with_no_recourse_to_public_funds_are_not_sent_to_benefits(clie
         assert r["mode"] == "offline"
     finally:
         client.delete(f"/api/users/{u['id']}")
+
+
+def test_every_support_option_has_a_way_to_apply(client):
+    from tests.conftest import synthetic_statement
+    from app.services.chat.support import support_options
+    u = client.post("/api/users", json={"name": "Flat 4", "address_as": "guys", "income_type": "student", "housing": "rent", "household_size": 4,
+                                        "challenges": ["no_recourse_to_public_funds"], "notes": "Students in Manchester."}).json()
+    try:
+        client.post(f"/api/users/{u['id']}/uploads", files={"file": ("s.csv", synthetic_statement(salary=900, rent=1400), "text/csv")})
+        opts = support_options(_ctx_for(client, u["id"]))
+        for o in opts:
+            assert o["apply_url"].startswith("https://") and o["steps"], o["id"]
+        hardship = next(o for o in opts if o["id"] == "uni_hardship")
+        assert hardship["draft"].startswith("Subject:") and "4 students" in hardship["draft"] and "£" in hardship["draft"]
+        assert next(o for o in opts if o["id"] == "railcard")["draft"] == ""  # nothing to write for a railcard
+    finally:
+        client.delete(f"/api/users/{u['id']}")

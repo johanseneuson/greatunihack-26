@@ -61,3 +61,10 @@
 .support-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
 .support-item:first-child { border-top: none; }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.apply-btn { padding: 6px 14px; font-size: 13px; }
+.apply-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+textarea.input { resize: vertical; font-family: inherit; line-height: 1.4; }
+
+.call-lang { background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; padding: 6px 12px; font: inherit; }
+.call-lang option { color: #1d1a22; }

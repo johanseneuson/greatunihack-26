@@ -34,11 +34,6 @@ def _student_options(ctx: UserContext, fc: dict, res: dict) -> list[dict]:
         "what": "Ask your university for a council tax certificate (proof of student status) and send it to the council. If any bill arrives, do not pay it before checking. Some councils ask international students for passport and visa details.",
         "link": "", "check": "Check your own council's student exemption page (in Manchester: manchester.gov.uk)." if local else ""})
     out.append({
-        "id": "student_work", "name": "Part-time work allowed on your visa",
-        "why": "Your part-time pay and money from family do not cover rent, bills and food between you.",
-        "what": "A Student visa usually allows limited part-time work in term time (often up to 20 hours a week at degree level). Check your own visa conditions, and never go over the limit.",
-        "link": "https://www.gov.uk/student-visa/work", "check": ""})
-    out.append({
         "id": "uni_hardship", "name": "Your university's hardship fund and money advice team",
         "why": f"Your forecast shows a {round(risk * 100)}% chance of going overdrawn in the next 30 days and your savings from home are running out, so it is worth asking now, before you miss rent.",
         "what": "Most universities have a hardship fund and a free money or advice team, and many also run food support through the students' union. Hardship funds are not 'public funds', so international students can usually apply, but rules differ by university. Asking for help does not usually affect a visa; the advice team can confirm for your case.",
@@ -61,6 +56,11 @@ def _student_options(ctx: UserContext, fc: dict, res: dict) -> list[dict]:
         "what": "Tell your bank you are struggling. UK banks have to treat customers in financial difficulty fairly, and can offer a payment plan, a lower overdraft limit or paused charges.",
         "link": "", "check": ""})
     out.append({
+        "id": "student_work", "name": "Part-time work allowed on your visa",
+        "why": "Your part-time pay and money from family do not cover rent, bills and food between you.",
+        "what": "A Student visa usually allows limited part-time work in term time (often up to 20 hours a week at degree level). Check your own visa conditions, and never go over the limit.",
+        "link": "https://www.gov.uk/student-visa/work", "check": ""})
+    out.append({
         "id": "railcard", "name": "16-25 Railcard (or student railcard)",
         "why": "You spend on travel every week.",
         "what": "Cheaper rail fares for 16 to 25 year olds and mature students. Worth it only if you take trains; buses and trams are not covered.",
@@ -68,7 +68,7 @@ def _student_options(ctx: UserContext, fc: dict, res: dict) -> list[dict]:
     return out
 
 
-def support_options(ctx: UserContext) -> list[dict]:
+def _options(ctx: UserContext) -> list[dict]:
     """Programmes worth checking for this person, most useful first. Each has why (from their data), what, link."""
     if not ctx.has_data:
         return []
@@ -147,6 +147,75 @@ def support_options(ctx: UserContext) -> list[dict]:
             "link": "", "check": ""})
     return out
 
+
+
+# How to apply for each scheme: what to do, the official page, and a message that can be sent as it is. Facts come from the
+# person's own data; the wording is a template (no AI), so it can't invent anything.
+APPLY_INFO = {
+    "universal_credit": {"url": "https://www.gov.uk/apply-universal-credit", "steps": [
+        "Check what you might get with a free benefits calculator first (Turn2us or Citizens Advice).",
+        "Have ready: ID, bank details, your tenancy and rent, and your pay slips.",
+        "Apply online on gov.uk, then book your first appointment."]},
+    "crisis_fund": {"url": None, "steps": ["Open the council page and find the Crisis and Resilience Fund.", "Say what essentials you cannot pay for and by when.", "Keep your recent bank statements to hand."]},
+    "rent_help": {"url": None, "steps": ["Contact the council housing benefit or welfare team.", "Say how much of your rent you cannot cover and for how long."]},
+    "debt_advice": {"url": "https://www.stepchange.org", "steps": ["Open StepChange or Citizens Advice and start a free money check.", "List what you owe, to whom, and the monthly payments.", "Ask about Breathing Space if you are being chased."]},
+    "social_tariff": {"url": "https://www.ofcom.org.uk/phones-and-broadband/saving-money/social-tariffs", "steps": ["Open Ofcom's list and pick your provider (or a cheaper one).", "Have your Universal Credit award letter ready as proof."]},
+    "warm_home_discount": {"url": "https://www.gov.uk/the-warm-home-discount-scheme", "steps": ["Most people are picked automatically. Check on gov.uk whether your supplier is on the scheme.", "If you have not heard by winter, ask your supplier."]},
+    "help_to_save": {"url": "https://www.gov.uk/get-help-savings-low-income", "steps": ["Check you get Universal Credit with earnings in your last assessment period.", "Open the account online with your Government Gateway or GOV.UK One Login."]},
+    "bank_support": {"url": None, "steps": ["Open your banking app or call the number on your card and ask for the financial support team.", "Ask for a payment plan, a lower overdraft limit or charges paused."]},
+    "uni_hardship": {"url": "https://www.ukcisa.org.uk/student-advice/finances/unexpected-financial-hardship/", "steps": [
+        "Search your university site for 'hardship fund', or go to the students' union advice service.",
+        "Gather: 3 months of bank statements, your tenancy agreement and a few lines explaining what changed.",
+        "Send the message below and ask for an appointment."]},
+    "council_tax": {"url": "https://www.gov.uk/find-local-council", "steps": [
+        "Ask your university for a council tax exemption certificate (proof you are a full-time student).",
+        "Send it to your council with the names of everyone in the house. If anyone is not a student, ask the council what applies.",
+        "If a bill arrives, do not pay it until the council has your certificate."]},
+    "council_crisis_fund": {"url": "https://www.manchester.gov.uk/HSF", "steps": [
+        "Open the council page and read who can apply.", "If it is unclear for students on visas, email or call and ask. They decide, so asking costs nothing.",
+        "Say what essentials you cannot pay for and by when."]},
+    "student_work": {"url": "https://www.gov.uk/student-visa/work", "steps": ["Check the work conditions on your visa (hours and type of job).", "Never go over the limit."]},
+    "railcard": {"url": "https://www.16-25railcard.co.uk", "steps": ["Buy online and have your photo and proof of age ready.", "Only worth it if you take trains."]},
+}
+
+
+def _draft(o_id: str, ctx: UserContext) -> str:
+    u = ctx.user
+    plural = u.household_size > 1
+    we, our = ("we", "our") if plural else ("I", "my")
+    who = f"{u.household_size} students" if plural and "student" in (u.income_type or "") else ("us" if plural else "me")
+    rent = max((s for s in ctx.recurring if s.direction == "out" and s.active and s.group == "essential"), key=lambda s: s.amount, default=None)
+    rent_line = f" Our biggest bill is {rent.name} at {gbp(rent.amount)}, next due {rent.next_date.strftime('%d %B')}." if rent and plural else (f" My biggest bill is {rent.name} at {gbp(rent.amount)}, next due {rent.next_date.strftime('%d %B')}." if rent else "")
+    sign = f"\n\nThank you,\n{u.name}"
+    situation = f"{we.capitalize()} have {gbp(ctx.balance)} in {our} account and expect to go overdrawn soon.{rent_line}"
+    if o_id == "uni_hardship":
+        return (f"Subject: Request for hardship support\n\nHello,\n\n{we.capitalize()} are {who} at the university living in Manchester. {situation} "
+                f"{we.capitalize()} would like to apply for the hardship fund and book an appointment with the money advice team. "
+                f"Please tell {'us' if plural else 'me'} what evidence {we} should bring.{sign}")
+    if o_id == "council_tax":
+        return (f"Subject: Council tax exemption certificate\n\nHello,\n\nCould you please send {'each of us' if plural else 'me'} a council tax exemption certificate showing "
+                f"{'our names' if plural else 'my name'}, date of birth, course and start and end dates? {we.capitalize()} are full-time students sharing one house.{sign}")
+    if o_id in ("council_crisis_fund", "crisis_fund", "rent_help"):
+        return (f"Subject: Enquiry about the Crisis and Resilience Fund\n\nHello,\n\n{situation} Can you tell {'us' if plural else 'me'} whether {we} can apply for "
+                f"emergency help with essentials, and how?{' We are international students on Student visas, so please confirm whether that affects eligibility.' if plural and 'student' in (u.income_type or '') else ''}{sign}")
+    if o_id == "bank_support":
+        return (f"Subject: I am struggling financially\n\nHello,\n\n{situation} Could you put {'us' if plural else 'me'} in touch with your financial support team? "
+                f"{we.capitalize()} would like to discuss a payment plan, a lower overdraft limit and pausing charges.{sign}")
+    return ""
+
+
+def _enrich(options: list[dict], ctx: UserContext) -> list[dict]:
+    local = "manchester" in (ctx.user.notes or "").lower()
+    for o in options:
+        info = APPLY_INFO.get(o["id"], {"url": None, "steps": []})
+        url = info["url"] or o.get("link") or ("https://www.manchester.gov.uk/financialsupport" if local else "https://www.gov.uk/find-local-council")
+        o["apply_url"], o["steps"], o["draft"] = url, info["steps"], _draft(o["id"], ctx)
+    return options
+
+
+def support_options(ctx: UserContext) -> list[dict]:
+    """Programmes worth checking, with how to apply (steps, official page, a ready-to-send message)."""
+    return _enrich(_options(ctx), ctx)
 
 def support_doc(options: list[dict]) -> str:
     if not options:

@@ -204,7 +204,10 @@ export interface ExpenseSub {
   series_id: string; name: string; category: string; period: string; amount: number; next_date: string
   essential: boolean; paused: boolean; kind: 'essential' | 'subscription' | 'income'
 }
-export interface SupportOption { id: string; name: string; why: string; what: string; link: string; check: string }
+export interface SupportOption {
+  id: string; name: string; why: string; what: string; link: string; check: string
+  apply_url: string; steps: string[]; draft: string
+}
 export interface PlannedItem { id: number; date: string; description: string; amount: number; essential: boolean }
 export interface PastItem { date: string; name: string; category: string; amount: number }
 export interface ExpensesData {

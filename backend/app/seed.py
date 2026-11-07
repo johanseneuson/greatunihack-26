@@ -119,7 +119,7 @@ def seed_maya(db: Session) -> bool:
     user = User(
         name="Maya Rahman", email=MAYA_EMAIL, income_type="irregular", housing="rent", household_size=3, dependents=0,
         challenges=["irregular_income", "debt", "sends_money_home", "struggling_to_save"],
-        notes="Retail assistant on a flexible-hours contract, paid weekly and it varies with shifts. Rents a room in a shared flat. "
+        notes="24 years old, lives in Manchester. Retail assistant on a flexible-hours contract, paid weekly and it varies with shifts. Rents a room in a shared flat. "
               "Sends £40 a month to family abroad. Uses her overdraft most months and has a Klarna plan. Finds money stressful and "
               "wants plain, practical help.",
     )

@@ -89,3 +89,35 @@ def test_demo_subscriptions_are_detected_and_pausable(client, user_with_data):
     assert {"Netflix", "Spotify Premium"} <= set(subs) and not subs["Netflix"]["essential"]
     r = client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": subs["Netflix"]["series_id"]}}).json()
     assert r["ok"]
+
+
+def _ctx_for(client, uid):
+    from app.db import SessionLocal
+    from app.models import User
+    from app.services.analytics.context import build_context
+    db = SessionLocal()
+    try:
+        return build_context(db, db.get(User, uid))
+    finally:
+        db.close()
+
+
+def test_support_matches_the_persons_situation(client, user_with_data):
+    from app.services.chat.support import support_doc, support_options
+    # Sam earns about 2,000 a month: not a Universal Credit signpost, and nothing is promised
+    ids = {o["id"] for o in support_options(_ctx_for(client, user_with_data["id"]))}
+    assert "universal_credit" not in ids and "help_to_save" not in ids
+    # A low-income renter on irregular pay is pointed at Universal Credit and what hangs off it
+    from tests.conftest import synthetic_statement
+    u = client.post("/api/users", json={"name": "Low Income", "income_type": "irregular", "housing": "rent", "notes": "Lives in Manchester."}).json()
+    try:
+        client.post(f"/api/users/{u['id']}/uploads", files={"file": ("s.csv", synthetic_statement(salary=1000, rent=550), "text/csv")})
+        opts = support_options(_ctx_for(client, u["id"]))
+        ids = {o["id"] for o in opts}
+        assert {"universal_credit", "help_to_save"} <= ids
+        uc = next(o for o in opts if o["id"] == "universal_credit")
+        assert uc["link"].startswith("https://www.gov.uk/") and "£" in uc["why"]
+        doc = support_doc(opts)
+        assert "MAY suit" in doc and "never 'is eligible'" in doc
+    finally:
+        client.delete(f"/api/users/{u['id']}")

@@ -43,6 +43,12 @@ def run_action(body: ActionRequest, ctx: UserContext = Depends(get_ctx), db: Ses
     return {"ok": ok, "message": message}
 
 
+@router.get("/support", summary="Real UK schemes this person may be eligible for, matched to their data (signposts, not decisions)")
+def support(ctx: UserContext = Depends(get_ctx)):
+    from ..services.chat.support import support_options
+    return support_options(ctx)
+
+
 @router.get("/expenses", summary="Expenses tab: upcoming payments, subscriptions (with paused state) and past transactions")
 def expenses(ctx: UserContext = Depends(get_ctx), db: Session = Depends(get_db)):
     planned, paused = load_decisions(ctx, db)

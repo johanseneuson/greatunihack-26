@@ -9,12 +9,18 @@ import { Spinner } from './ui'
 const SUGGESTIONS = ['I need to save money. Which subscription should I cancel?', 'Can I afford £20 this week?', 'How do I get to payday?', 'What help can I get?']
 const KIND = { knowledge: 'guidance', profile: 'your profile', account: 'your account', transactions: 'your transactions' } as Record<string, string>
 
+const URL_RX = /(https?:\/\/[^\s)]+)/g
+function linkify(text: string) {
+  return text.split(URL_RX).map((part, i) =>
+    i % 2 === 1 ? <a key={i} href={part} target="_blank" rel="noreferrer noopener">{part.replace(/[.,;]+$/, '')}</a> : part)
+}
+
 function Bubble({ m }: { m: Msg }) {
   const { runAction, decline } = useChat()
   return (
     <>
       <div className={`msg ${m.role === 'user' ? 'me' : 'bot'}`}>
-        {m.text}
+        {linkify(m.text)}
         {m.role === 'assistant' && m.sources && m.sources.length > 0 && (
           <details className="src">
             <summary>What I looked at</summary>

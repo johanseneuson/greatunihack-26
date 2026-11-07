@@ -1,120 +1,28 @@
-import { Plus, RotateCcw, Sparkles, Target, Trash2, Wand2 } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Plus, RotateCcw, Sparkles, Target, Trash2, Wand2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { Card, PageHead, Progress, Spinner } from '../components/ui'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
-import { compact, dayMonth, fullDate, monthLong, monthShort, monthTicks, money0, pct, signed0 } from '../lib/format'
+import { compact, fullDate, money, monthLong, monthShort, monthTicks, money0, pct, signed0 } from '../lib/format'
 import type { Adjustment, Dashboard, Forecast, ScenarioResult } from '../lib/types'
 
-const HORIZONS = [{ m: 3, label: '3 months' }, { m: 6, label: '6 months' }, { m: 12, label: '1 year' }]
+const HORIZONS = [{ m: 1, label: '1M', long: '1 month' }, { m: 3, label: '3M', long: '3 months' },
+  { m: 6, label: '6M', long: '6 months' }, { m: 12, label: '1Y', long: '1 year' }]
 
 export default function Future({ d }: { d: Dashboard }) {
   const { user } = useUser()
   const [fc, setFc] = useState<Forecast | null>(null)
-  const [months, setMonths] = useState(6)
 
   useEffect(() => {
     if (user) api.forecast(user.id, 366, 2).then(setFc).catch(() => setFc(null))
   }, [user, d])
 
-  const data = useMemo(() => {
-    if (!fc) return []
-    const cutoff = new Date(d.overview.as_of)
-    cutoff.setMonth(cutoff.getMonth() + months)
-    return fc.daily.filter((p) => new Date(p.date) <= cutoff).map((p) => ({ ...p, band: [p.p10, p.p90] as [number, number] }))
-  }, [fc, months, d.overview.as_of])
-
-  const snap = d.time_travel.snapshots.find((s) => s.months_ahead === months) ?? d.time_travel.snapshots.at(-1)
-  const s = fc?.summary ?? d.forecast.summary
-
   return (
     <div className="page">
       <PageHead title="Financial time travel" />
-
-      <div className="grid grid-3 collapse">
-        <Card className="stack" >
-          <div className="small muted">Future you in {HORIZONS.find((h) => h.m === months)?.label}</div>
-          {snap && <>
-            <div className="tile-big num">{money0(snap.p50)}</div>
-            <div className={`small ${snap.change_vs_today >= 0 ? 'pos' : 'neg'}`}>{signed0(snap.change_vs_today)} vs today ({money0(d.overview.balance)})</div>
-            <div className="tiny muted">80% likely between {money0(snap.p10)} and {money0(snap.p90)}</div>
-          </>}
-        </Card>
-        <Card className="stack">
-          <div className="small muted">Chance of going overdrawn</div>
-          <div className="row" style={{ gap: 18 }}>
-            <div><div className={`tile-big num ${(s.prob_overdraft['30d'] ?? 0) > 0.2 ? 'neg' : ''}`}>{pct(s.prob_overdraft['30d'] ?? 0)}</div><div className="tiny muted">next 30 days</div></div>
-            <div><div className={`tile-big num ${(s.prob_overdraft['90d'] ?? 0) > 0.2 ? 'neg' : ''}`}>{pct(s.prob_overdraft['90d'] ?? 0)}</div><div className="tiny muted">next 90 days</div></div>
-          </div>
-          <div className="tiny muted">Lowest point likely around {dayMonth(s.lowest_point.date)} ({money0(s.lowest_point.p50)})</div>
-        </Card>
-        <Card className="stack">
-          <div className="small muted">Surprise costs</div>
-          <div className="tile-big num">{pct(s.prob_unexpected_expense_90d)}</div>
-          <div className="tiny muted">chance of an unplanned cost around {money0(s.typical_unexpected_expense)} in the next 3 months, based on your history</div>
-        </Card>
-      </div>
-
-      <Card className="section">
-        <div className="row between wrap" style={{ marginBottom: 8 }}>
-          <h3>Your balance, 1,000 possible futures</h3>
-          <div className="seg" style={{ margin: 0 }}>
-            {HORIZONS.map((h) => <button key={h.m} className={months === h.m ? 'on' : ''} onClick={() => setMonths(h.m)}>{h.label}</button>)}
-          </div>
-        </div>
-        <div style={{ height: 300 }}>
-          {!fc ? <div className="center" style={{ minHeight: 300 }}><Spinner /></div> : (
-            <ResponsiveContainer>
-              <ComposedChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.22} />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.08} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="date" ticks={monthTicks(data, 'date')} tickFormatter={monthShort} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={compact} width={56} axisLine={false} tickLine={false} />
-                <Tooltip content={({ active, payload }) => {
-                  const p = payload?.[0]?.payload as (typeof data)[number] | undefined
-                  if (!active || !p) return null
-                  return (
-                    <div className="chart-tip">
-                      <strong>{fullDate(p.date)}</strong><br />
-                      Likely: <strong>{money0(p.p50)}</strong><br />
-                      <span className="muted">Range {money0(p.p10)} – {money0(p.p90)}</span><br />
-                      {p.prob_negative > 0.01 && <span className="neg">{pct(p.prob_negative)} chance below £0</span>}
-                    </div>
-                  )
-                }} />
-                <ReferenceLine y={0} stroke="var(--danger)" strokeDasharray="4 4" />
-                <ReferenceLine y={s.buffer_target} stroke="var(--ill-orange)" strokeDasharray="2 4"
-                  label={{ value: 'Safety buffer', position: 'insideBottomRight', fill: 'var(--warning)', fontSize: 11 }} />
-                <Area dataKey="band" stroke="none" fill="url(#band)" isAnimationActive={false} />
-                <Line dataKey="p50" stroke="var(--primary)" strokeWidth={2.5} dot={false} isAnimationActive={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-        <div className="legend" style={{ marginTop: 8 }}>
-          <span><i style={{ background: 'var(--primary)' }} />Most likely</span>
-          <span><i style={{ background: 'color-mix(in srgb, var(--primary) 20%, transparent)' }} />80% of futures</span>
-          <span><i style={{ background: 'var(--ill-orange)' }} />Safety buffer {money0(s.buffer_target)}</span>
-          <span><i style={{ background: 'var(--danger)' }} />£0</span>
-        </div>
-      </Card>
-
-      <div className="grid grid-4 section">
-        {d.time_travel.snapshots.map((t) => (
-          <Card key={t.months_ahead}>
-            <div className="tiny muted">{t.months_ahead === 12 ? 'In 1 year' : `In ${t.months_ahead} month${t.months_ahead > 1 ? 's' : ''}`} · {fullDate(t.date)}</div>
-            <div className="num" style={{ fontSize: 22, fontWeight: 600, marginTop: 4 }}>{money0(t.p50)}</div>
-            <div className={`small ${t.change_vs_today >= 0 ? 'pos' : 'neg'}`}>{signed0(t.change_vs_today)}</div>
-          </Card>
-        ))}
-      </div>
+      <FutureTracker d={d} fc={fc} />
 
       <div className="grid grid-2 collapse section" style={{ alignItems: 'start' }}>
         <ScenarioBuilder d={d} />
@@ -264,3 +172,99 @@ function ScenarioBuilder({ d }: { d: Dashboard }) {
     </div>
   )
 }
+
+/** "Future you" number tracker: big balance above the graph that follows the cursor (Invest-style). */
+function FutureTracker({ d, fc }: { d: Dashboard; fc: Forecast | null }) {
+  const [months, setMonths] = useState(6)
+  const [active, setActive] = useState<number | null>(null)
+  const today = d.overview.balance
+
+  const data = useMemo(() => {
+    if (!fc) return []
+    const cutoff = new Date(d.overview.as_of)
+    cutoff.setMonth(cutoff.getMonth() + months)
+    return fc.daily.filter((p) => new Date(p.date) <= cutoff).map((p) => ({ ...p, band: [p.p10, p.p90] as [number, number] }))
+  }, [fc, months, d.overview.as_of])
+
+  const point = data.length ? data[active ?? data.length - 1] : null
+  const horizon = HORIZONS.find((h) => h.m === months)!
+  const change = point ? point.p50 - today : 0
+  const up = change >= 0
+  const [pounds, pence] = point ? money(point.p50).replace('£', '').replace('-', '').split('.') : ['–', '']
+  const negative = (point?.p50 ?? 0) < 0
+
+  return (
+    <Card className="tracker">
+      <div className="tracker-label">
+        Future you {active == null ? `in ${horizon.long}` : 'on'}
+        <span className="tracker-date">{point ? fullDate(point.date) : ''}</span>
+      </div>
+      <div className="tracker-value num" aria-live="polite">
+        {negative && <span className="tracker-minus">-</span>}
+        <span className="tracker-currency">£</span>{pounds}<span className="tracker-pence">.{pence}</span>
+      </div>
+      <div className="tracker-stats">
+        <div>
+          <div className="tracker-stat-label">Vs today</div>
+          <div className={`tracker-stat num ${up ? 'pos' : 'neg'}`}>
+            {up ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}{money0(Math.abs(change))}
+          </div>
+        </div>
+        {point && (
+          <div>
+            <div className="tracker-stat-label">Likely range</div>
+            <div className="tracker-stat num">{money0(point.p10)} – {money0(point.p90)}</div>
+          </div>
+        )}
+        {point && point.prob_negative > 0.01 && (
+          <div>
+            <div className="tracker-stat-label">Chance below £0</div>
+            <div className="tracker-stat num neg">{pct(point.prob_negative)}</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ height: 300, marginTop: 8 }}>
+        {!fc ? <div className="center" style={{ minHeight: 300 }}><Spinner /></div> : (
+          <ResponsiveContainer>
+            <ComposedChart
+              data={data}
+              margin={{ top: 12, right: 4, left: 4, bottom: 0 }}
+              onMouseMove={(st) => setActive(st?.activeTooltipIndex != null ? Number(st.activeTooltipIndex) : null)}
+              onMouseLeave={() => setActive(null)}
+            >
+              <defs>
+                <linearGradient id="tracker-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="date" ticks={monthTicks(data, 'date')} tickFormatter={monthShort} axisLine={false} tickLine={false} />
+              <YAxis hide domain={['auto', 'auto']} />
+              <Tooltip content={() => null} cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '3 3' }} isAnimationActive={false} />
+              <ReferenceLine y={0} stroke="var(--danger)" strokeDasharray="4 4" />
+              <ReferenceLine y={d.overview.buffer_target} stroke="var(--ill-orange)" strokeDasharray="2 4" />
+              <Area dataKey="band" stroke="none" fill="var(--primary)" fillOpacity={0.08} isAnimationActive={false} activeDot={false} />
+              <Area dataKey="p50" stroke="var(--primary)" strokeWidth={2.5} fill="url(#tracker-fill)" isAnimationActive={false}
+                activeDot={{ r: 6, fill: 'var(--primary)', stroke: 'var(--surface)', strokeWidth: 3 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      <div className="range-tabs" role="tablist" aria-label="Time range">
+        {HORIZONS.map((h) => (
+          <button key={h.m} role="tab" aria-selected={months === h.m} className={months === h.m ? 'on' : ''}
+            onClick={() => { setMonths(h.m); setActive(null) }}>{h.label}</button>
+        ))}
+      </div>
+      <div className="legend" style={{ justifyContent: 'center', marginTop: 10 }}>
+        <span><i style={{ background: 'var(--primary)' }} />Most likely</span>
+        <span><i style={{ background: 'color-mix(in srgb, var(--primary) 20%, transparent)' }} />80% of futures</span>
+        <span><i style={{ background: 'var(--ill-orange)' }} />Safety buffer {money0(d.overview.buffer_target)}</span>
+        <span><i style={{ background: 'var(--danger)' }} />£0</span>
+      </div>
+    </Card>
+  )
+}
+

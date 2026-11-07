@@ -1,7 +1,7 @@
 // Thin, platform-neutral API client (uses only fetch) - the Expo app can import this unchanged
 // by calling setApiBase('http://<laptop-ip>:8000/api').
 import type {
-  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, ExpensesData, Forecast, ForecastAccuracy, Goal, ImportResult, Recurring,
+  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, Debt, ExpensesData, Forecast, ForecastAccuracy, FutureSelfAnswer, Goal, Milestones, Opportunities, ImportResult, Recurring,
   ScenarioResult, Transaction, User,
 } from './types'
 
@@ -62,6 +62,12 @@ export const api = {
   dashboard: (id: number) => req<Dashboard>(`/users/${id}/insights/dashboard`),
   forecast: (id: number, horizonDays = 365, step = 2) =>
     req<Forecast>(`/users/${id}/insights/forecast?horizon_days=${horizonDays}&step=${step}`),
+  opportunities: (id: number) => req<Opportunities>(`/users/${id}/insights/opportunities`),
+  milestones: (id: number, extra = 0) => req<Milestones | null>(`/users/${id}/insights/milestones?extra=${extra}`),
+  futureSelf: (id: number, question: string) => req<FutureSelfAnswer>(`/users/${id}/insights/future-self`, json('POST', { question })),
+  debts: (id: number) => req<Debt[]>(`/users/${id}/debts`),
+  addDebt: (id: number, body: Omit<Debt, 'id' | 'series_id'>) => req<Debt>(`/users/${id}/debts`, json('POST', body)),
+  deleteDebt: (id: number, debtId: number) => req<void>(`/users/${id}/debts/${debtId}`, { method: 'DELETE' }),
   forecastAccuracy: (id: number) => req<ForecastAccuracy | null>(`/users/${id}/insights/forecast-accuracy`),
   recurring: (id: number) => req<Recurring[]>(`/users/${id}/insights/recurring`),
   scenario: (id: number, adjustments: Adjustment[], horizonDays = 365) =>

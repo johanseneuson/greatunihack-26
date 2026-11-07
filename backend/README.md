@@ -67,6 +67,22 @@ Insights  (/users/{id}/insights/...)
 
 Amounts are signed: negative = money out. Warnings have `severity`: `critical | warning | info | positive`.
 
+## Wow factors
+
+**Financial Support & Opportunity Finder** - `GET /insights/opportunities`. Lydia proactively matches the user's data to real UK
+support they may be missing: Universal Credit, Child Benefit, Tax-Free Childcare, Council Tax Reduction and single-person
+discount, the Crisis and Resilience Fund, help with rent, university hardship funds, broadband social tariffs, Warm Home
+Discount, NHS Low Income Scheme, Help to Save, Lifetime ISA, employer pension contributions, free debt advice and bank
+hardship support. Each item says why it may apply (using the user's own figures), what it is, an eligibility checklist
+(met / we can't tell / not met) and an official link. Signposts, never decisions. The same list feeds Lydia's chat.
+
+**Future Self - AI financial time travel**
+- `GET /insights/milestones?extra=50` - debt-free countdown (avalanche payoff with interest), emergency-fund progress and
+  the before-payday check, with and without an extra monthly repayment. Debts are managed at `/users/{id}/debts`.
+- `POST /insights/future-self {"question": "What if I pay an extra £50 towards my credit card?"}` - Claude turns the
+  question into a structured scenario (strict JSON schema); the forecast and debt engines compute every number in the
+  answer. Without an API key a rule-based parser handles the common questions.
+
 ## How the forecast works
 
 ```

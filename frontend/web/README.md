@@ -21,11 +21,11 @@ Vite proxies `/api` to `http://localhost:8000` (override with `VITE_API_PROXY`, 
 
 | Screen | What it shows |
 |---|---|
-| **Home** | Greeting header, top alert, total balance + safe-to-spend, accounts, coming-up payments, resilience score dial, goals, "Future you" toggle with smart moves |
+| **Home** | Greeting header, top alert, total balance + safe-to-spend, accounts, coming-up payments, resilience score dial, goals, "Future you" toggle with smart moves, and **Lydia has found possible support** (proactive Opportunity Finder with eligibility checklists and official links) |
 | **Spending** | Newsfeed tiles (waves, budget nearly used, last month, creeping categories, subscriptions) · Categories (12-month bars, tap a month for its breakdown) · Budgets (personalised limits, safe to spend, needs/wants/savings split) |
-| **Future** | Financial time travel: "Future you" balance tracker that follows your cursor over the 1,000-future forecast (1M/3M/6M/1Y), then spending waves: past surges + 26-week forecast, heavy months in the next year, what drove each past wave, seasonal pattern |
+| **Future** | Financial time travel: "Future you" balance tracker that follows your cursor over the 1,000-future forecast (1M/3M/6M/1Y), then spending waves: past surges + 26-week forecast, heavy months in the next year, what drove each past wave, seasonal pattern. **Future Self**: debt-free countdown ring, emergency-fund bar and before-payday check that move with an extra-repayment slider, plus "Ask your future self" what-if questions with a comparison chart |
 | **Assistant** | Chat with Lydia (RAG over your own data, can propose pausing subscriptions, tells you which real UK schemes you may be eligible for, voice calls in 11 languages); early warnings tucked underneath |
-| **Profile & data** | Switch user / add a person, link a sandbox bank, upload a CSV, circumstances form (drives personalisation), goals, light/dark theme |
+| **Profile & data** | Switch user / add a person, link a sandbox bank, upload a CSV, circumstances form (drives personalisation), goals, light/dark theme, debts |
 
 Responsive: sidebar on desktop, NatWest-style bottom tab bar on phones. Light and dark mode.
 

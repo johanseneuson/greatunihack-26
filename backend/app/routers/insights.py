@@ -1,11 +1,18 @@
 """Insights: understand the past, see the future, get warned early, plan with a personal budget."""
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..schemas import CoachRequest, ScenarioRequest
+from ..db import get_db
+from ..models import Debt
+from ..schemas import CoachRequest, FutureSelfRequest, ScenarioRequest
 from ..services import coach as coach_service
 from ..services.analytics import insights as ins
 from ..services.analytics.context import UserContext
+from ..services.analytics.debts import debts_for, milestones as build_milestones
+from ..services.analytics.futureself import ask
+from ..services.chat.support import support_options, support_summary
 from ..services.analytics.forecast import Adjustment
 from ..services.analytics.timetravel import run_scenario
 from .deps import get_ctx
@@ -83,3 +90,31 @@ def coach(body: CoachRequest | None = None, ctx: UserContext = Depends(get_ctx))
         return {"source": "rules", "headline": "Let's get started", "summary": "Upload a statement or link a bank first.",
                 "future_you": "", "watch_out": [], "actions": [], "encouragement": ""}
     return coach_service.coach(ins.coach_snapshot(ctx), body.question if body else None)
+
+
+@router.get("/opportunities", summary="Financial Support & Opportunity Finder: schemes, discounts and savings boosts this person may be missing")
+def opportunities(ctx: UserContext = Depends(get_ctx)):
+    options = support_options(ctx) if ctx.has_data else []
+    return {"summary": support_summary(options), "options": options}
+
+
+def _debts(db: Session, user_id: int):
+    return debts_for(db.scalars(select(Debt).where(Debt.user_id == user_id)).all())
+
+
+@router.get("/milestones", summary="Future Self milestones: debt-free countdown, emergency fund and payday check, with an optional extra monthly repayment")
+def milestones(
+    extra: float = Query(0, ge=0, le=5000, description="Extra paid towards debts each month"),
+    ctx: UserContext = Depends(get_ctx), db: Session = Depends(get_db),
+):
+    if not ctx.has_data:
+        return None
+    return build_milestones(ctx, ins.forecast(ctx, 366), _debts(db, ctx.user.id), extra)
+
+
+@router.post("/future-self", summary="Ask your future self: a 'what if' question answered with the forecast engine")
+def future_self(body: FutureSelfRequest, ctx: UserContext = Depends(get_ctx), db: Session = Depends(get_db)):
+    if not ctx.has_data:
+        return {"question": body.question, "answer": "Add some transactions first so I can see your future.", "path": []}
+    return ask(ctx, ins.forecast(ctx, 366), _debts(db, ctx.user.id), body.question, settings.simulations)
+

@@ -6,6 +6,7 @@ import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
 import { AlertCard } from '../components/AlertCard'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { Gauge } from '../components/Gauge'
+import { OpportunityFinder } from '../components/OpportunityFinder'
 import { Card, Progress } from '../components/ui'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
@@ -147,6 +148,9 @@ export default function Home({ d }: { d: Dashboard }) {
         ) : (
           <FutureTeaser d={d} spark={spark} six={six} />
         )}
+
+        {/* Proactive: Lydia surfaces support the person may be missing, without being asked */}
+        <div className="section"><OpportunityFinder /></div>
 
         <div className="section">
           <div className="section-title"><h2>For you</h2><Link className="card-link" to="/assistant">All insights <ChevronRight size={16} /></Link></div>

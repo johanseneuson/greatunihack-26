@@ -166,6 +166,30 @@ def seed(db: Session) -> list[int]:
     return created
 
 
+# Demo debts for the Future Self debt-free countdown. Maya's Klarna plan is the one in her statement (linked to that
+# recurring payment so it isn't counted twice); Jordan's credit card is illustrative, for "pay an extra £50" questions.
+DEMO_DEBTS = {
+    MAYA_EMAIL: [dict(name="Klarna", kind="bnpl", balance=210.0, apr=0.0, min_payment=35.0, merchant="Klarna")],
+    "jordan@demo.financebuddy": [dict(name="Credit card", kind="credit_card", balance=1450.0, apr=24.9, min_payment=45.0, merchant=None)],
+}
+
+
+def add_debts(db: Session, user: User, debts: list[dict]) -> int:
+    """Idempotent: only adds debts to a user who has none."""
+    import hashlib
+    from .models import Debt
+    from .services.categories import merchant_key
+    if db.scalar(select(Debt.id).where(Debt.user_id == user.id)):
+        return 0
+    for d in debts:
+        d = dict(d)
+        merchant = d.pop("merchant")
+        sid = f"out-{hashlib.sha1(merchant_key(merchant).encode()).hexdigest()[:8]}" if merchant else None
+        db.add(Debt(user_id=user.id, series_id=sid, **d))
+    db.commit()
+    return len(debts)
+
+
 def seed_safely() -> None:
     db = SessionLocal()
     try:
@@ -175,6 +199,10 @@ def seed_safely() -> None:
             user = db.scalar(select(User).where(User.email == email))
             if user and add_subscriptions(db, user, subs):
                 log.info("Added demo subscriptions for %s", user.name)
+        for email, debts in DEMO_DEBTS.items():
+            user = db.scalar(select(User).where(User.email == email))
+            if user and add_debts(db, user, debts):
+                log.info("Added demo debts for %s", user.name)
     except OSError as e:  # offline and datasets not cached yet
         log.warning("Skipping demo seed - couldn't fetch Kaggle data: %s", e)
         db.rollback()

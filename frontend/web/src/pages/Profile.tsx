@@ -1,10 +1,10 @@
-import { Building2, Check, ChevronRight, FileUp, Moon, Plus, Sun, Target, Trash2, UserPlus } from 'lucide-react'
+import { Building2, Check, ChevronRight, CreditCard, FileUp, Moon, Plus, Sun, Target, Trash2, UserPlus } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Card, PageHead, Sheet } from '../components/ui'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import { fullDate, initials, money0 } from '../lib/format'
-import type { Connector, Goal, ImportResult, User } from '../lib/types'
+import type { Connector, Debt, Goal, ImportResult, User } from '../lib/types'
 
 const CHALLENGES = [
   ['irregular_income', 'Irregular income'], ['debt', 'Paying off debt'], ['first_job', 'First job'],
@@ -71,6 +71,7 @@ export default function Profile() {
           </Card>
 
           {user && <Goals user={user} onChange={refresh} />}
+          {user && <Debts user={user} />}
 
           <Card>
             <h3>Appearance</h3>
@@ -169,6 +170,47 @@ function Circumstances({ user, onSaved }: { user: User; onSaved: () => Promise<v
           <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save & update my future'}</button>
           {saved && <span className="small pos row" style={{ gap: 4 }}><Check size={16} /> Updated</span>}
         </div>
+      </form>
+    </Card>
+  )
+}
+
+const KINDS: [Debt['kind'], string][] = [['credit_card', 'Credit card'], ['bnpl', 'Buy now pay later'], ['loan', 'Loan'], ['overdraft', 'Overdraft'], ['other', 'Other']]
+
+/** Debts power the Future Self debt-free countdown. */
+function Debts({ user }: { user: User }) {
+  const [debts, setDebts] = useState<Debt[]>([])
+  const [f, setF] = useState({ name: '', kind: 'credit_card' as Debt['kind'], balance: '', apr: '', min_payment: '' })
+  const load = () => api.debts(user.id).then(setDebts)
+  useEffect(() => { load() }, [user.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const add = async (e: FormEvent) => {
+    e.preventDefault()
+    await api.addDebt(user.id, { name: f.name, kind: f.kind, balance: Number(f.balance), apr: Number(f.apr || 0), min_payment: Number(f.min_payment) })
+    setF({ name: '', kind: 'credit_card', balance: '', apr: '', min_payment: '' })
+    await load()
+  }
+  return (
+    <Card>
+      <h3>Debts</h3>
+      <p className="tiny muted" style={{ margin: '4px 0 0' }}>Used for your debt-free countdown on the Future tab.</p>
+      <div className="stack" style={{ gap: 8, margin: '10px 0' }}>
+        {debts.length === 0 && <span className="small muted">No debts added.</span>}
+        {debts.map((d) => (
+          <div key={d.id} className="row between small">
+            <span className="row" style={{ gap: 8 }}><CreditCard size={16} color="var(--primary)" />{d.name} · {money0(d.balance)} · {d.apr}% APR · {money0(d.min_payment)}/mo</span>
+            <button className="icon-btn" aria-label={`Delete ${d.name}`} onClick={async () => { await api.deleteDebt(user.id, d.id); await load() }}><Trash2 size={16} /></button>
+          </div>
+        ))}
+      </div>
+      <form className="row wrap" onSubmit={add}>
+        <input className="input" style={{ flex: '2 1 130px' }} placeholder="Name, e.g. Credit card" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required />
+        <select className="input" style={{ flex: '1 1 130px' }} value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as Debt['kind'] })} aria-label="Type">
+          {KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </select>
+        <input className="input num" style={{ flex: '1 1 90px' }} type="number" min={1} step="0.01" placeholder="Owed £" value={f.balance} onChange={(e) => setF({ ...f, balance: e.target.value })} required aria-label="Amount owed" />
+        <input className="input num" style={{ flex: '1 1 80px' }} type="number" min={0} max={100} step="0.1" placeholder="APR %" value={f.apr} onChange={(e) => setF({ ...f, apr: e.target.value })} aria-label="APR" />
+        <input className="input num" style={{ flex: '1 1 90px' }} type="number" min={1} step="0.01" placeholder="Min £/mo" value={f.min_payment} onChange={(e) => setF({ ...f, min_payment: e.target.value })} required aria-label="Minimum monthly payment" />
+        <button className="btn" aria-label="Add debt"><Plus size={16} /></button>
       </form>
     </Card>
   )

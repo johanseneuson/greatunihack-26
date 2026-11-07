@@ -156,7 +156,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
     function switchTo(l: string) {
       s.lang = l; setLang(l); chatRef.current.setLanguage(l)  // new language for speaking, listening and the assistant's replies
       s.gen++; stopSpeaking(); stopListening()
-      void say(phrases(l).switched)
+      listen()  // straight back to listening in the new language, no chatter
     }
 
     ctl.current = {

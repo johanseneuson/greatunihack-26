@@ -155,3 +155,23 @@ def test_every_support_option_has_a_way_to_apply(client):
         assert next(o for o in opts if o["id"] == "railcard")["draft"] == ""  # nothing to write for a railcard
     finally:
         client.delete(f"/api/users/{u['id']}")
+
+
+def test_thinking_out_loud_and_intros_are_cleaned():
+    from app.services.chat.assistant import HEDGE, INTRO, _strip_thinking
+    messy = "Wait, let me check. Actually, your hardship fund is the best first step, so ask this week."
+    assert HEDGE.search(messy)
+    assert _strip_thinking(messy) == "Your hardship fund is the best first step, so ask this week."
+    clean = "Your balance is low, so ask the hardship fund this week."
+    assert not HEDGE.search(clean) and _strip_thinking(clean) == clean
+    assert INTRO.sub("", "Of course, I'm Lydia. Here is your balance.").startswith("I'm Lydia")  # leading filler removed
+    assert INTRO.sub("", "Claro, ahora hablo español.") == "ahora hablo español."
+
+
+def test_applications_match_what_the_answer_is_about():
+    from app.services.chat.support import match_applications
+    opts = [{"id": "uni_hardship", "name": "Hardship"}, {"id": "council_tax", "name": "Council tax"}, {"id": "railcard", "name": "Railcard"}]
+    got = match_applications("How do we apply to the university hardship fund?", opts)
+    assert [o["id"] for o in got] == ["uni_hardship"]
+    assert [o["id"] for o in match_applications("ask about the council tax exemption certificate", opts)] == ["council_tax", ]
+    assert match_applications("what is my balance", opts) == []

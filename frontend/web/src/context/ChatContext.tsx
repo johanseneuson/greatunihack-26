@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { api } from '../lib/api'
-import type { ChatReply, ChatSource, ProposedAction } from '../lib/types'
+import type { ChatReply, ChatSource, ProposedAction, SupportOption } from '../lib/types'
 import { useUser } from './UserContext'
 
 export interface Msg {
@@ -12,6 +12,7 @@ export interface Msg {
   mode?: 'llm' | 'offline'
   grounded?: boolean
   actions?: ProposedAction[]
+  applications?: SupportOption[]
 }
 
 export const LANGUAGES = ['English', 'Español', 'Polski', 'Português', 'Français', 'Italiano', 'Română', 'العربية', 'हिन्दी', 'Bengali (বাংলা)', 'Urdu (اردو)']
@@ -62,7 +63,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     try {
       const history = [...msgsRef.current, { role: 'user' as const, text }].slice(-20).map((m) => ({ role: m.role, content: m.text }))
       const r = await api.chat(uid, { messages: history, language, plain, voice: opts?.voice })
-      push({ role: 'assistant', text: r.reply, sources: r.sources, mode: r.mode, grounded: r.grounded, actions: r.actions })
+      push({ role: 'assistant', text: r.reply, sources: r.sources, mode: r.mode, grounded: r.grounded, actions: r.actions, applications: r.applications })
       return r
     } catch {
       push({ role: 'assistant', text: 'Sorry, I could not reach the server. Please try again.' })

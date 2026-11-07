@@ -441,9 +441,37 @@ def support_doc(options: list[dict]) -> str:
     lines = [
         "Support that MAY suit this person, matched to their data. These are signposts to check, not decisions: the organisation named decides eligibility. Say 'may be eligible', never 'is eligible', and never promise an amount."
     ]
+    lines.append("When you mention one of these, the app shows an Apply button under your reply with the steps and a message ready to send. If they ask how to apply, tell them to tap Apply below and give the single first step.")
     for o in options:
         unknown = [c["label"] for c in o.get("checks", []) if c["status"] == "unknown"]
         lines.append(f"- {o['name']}. Why it may suit them: {o['why']} What it is: {o['what']}"
                      + (f" Official link: {o['link']}" if o["link"] else "") + (f" {o['check']}" if o["check"] else "")
                      + (f" Still to check: {'; '.join(unknown)}." if unknown else ""))
     return "\n".join(lines)
+
+
+# Which support items an answer is about, so the chat can offer an Apply button (steps, ready-to-send message, official page).
+# Anything to do with the university (hardship fund, advice team, certificates, students' union) maps to the university items.
+TRIGGERS = {
+    "uni_hardship": r"hardship|university|uni\b|students'? union|advice team|money advice|student support|food support|bursary",
+    "council_tax": r"council tax|exemption|certificate",
+    "council_crisis_fund": r"crisis and resilience|household support|council.*(fund|grant)|welfare provision|emergency (grant|help)",
+    "crisis_fund": r"crisis and resilience|household support|welfare provision",
+    "debt_advice": r"citizens advice|stepchange|debt advice|breathing space|moneyhelper",
+    "bank_support": r"your bank|hardship support from|financial support team",
+    "universal_credit": r"universal credit",
+    "help_to_save": r"help to save",
+    "social_tariff": r"social tariff",
+    "warm_home_discount": r"warm home discount",
+    "railcard": r"railcard",
+}
+
+
+def match_applications(text: str, options: list[dict], limit: int = 2) -> list[dict]:
+    """Options (with steps, draft and apply_url) that the question or reply is about. Most relevant first."""
+    found = []
+    for o in options:
+        rx = TRIGGERS.get(o["id"])
+        if rx and re.search(rx, text, re.I):
+            found.append(o)
+    return found[:limit]

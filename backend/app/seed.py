@@ -39,6 +39,34 @@ DEMO_USERS = [
 ]
 
 
+# Everyday-spending data has no subscriptions, so give Jordan a few realistic ones (monthly, same day each month).
+# This makes subscription detection, pausing from the chat/call and the Expenses tab easy to try.
+DEMO_SUBSCRIPTIONS = {
+    "jordan@demo.financebuddy": [
+        ("Netflix", 10.99, 3), ("Spotify Premium", 11.99, 9), ("PureGym membership", 24.99, 14),
+        ("Disney Plus", 7.99, 21), ("Apple.com/bill iCloud", 2.99, 26),
+    ],
+}
+
+
+def add_subscriptions(db: Session, user: User, subs: list[tuple], months: int = 8) -> int:
+    """Add monthly subscription charges to a user's history (up to their last transaction). Safe to run repeatedly."""
+    last = db.scalar(select(func.max(Transaction.date)).where(Transaction.user_id == user.id))
+    account = db.scalar(select(Account.name).where(Account.user_id == user.id).order_by(Account.id))
+    if not last or not account:
+        return 0
+    rows = []
+    for back in range(months + 1):
+        y, m = divmod(last.year * 12 + last.month - 1 - back, 12)
+        for name, amount, dom in subs:
+            d = date(y, m + 1, min(dom, 28))
+            if last - timedelta(days=months * 31) <= d <= last:
+                rows.append({"date": pd.Timestamp(d), "description": name, "amount": -amount, "raw_category": None, "account": account})
+    if not rows:
+        return 0
+    return import_rows(db, user, pd.DataFrame(rows), source="demo-subscriptions", provider="demo")["imported"]
+
+
 def seed(db: Session) -> list[int]:
     created = []
     for spec in DEMO_USERS:
@@ -73,6 +101,10 @@ def seed_safely() -> None:
     db = SessionLocal()
     try:
         seed(db)
+        for email, subs in DEMO_SUBSCRIPTIONS.items():  # also tops up databases seeded before this existed
+            user = db.scalar(select(User).where(User.email == email))
+            if user and add_subscriptions(db, user, subs):
+                log.info("Added demo subscriptions for %s", user.name)
     except OSError as e:  # offline and datasets not cached yet
         log.warning("Skipping demo seed - couldn't fetch Kaggle data: %s", e)
         db.rollback()

@@ -72,3 +72,20 @@ def test_actions_are_validated_and_scoped_to_the_user(client, user_with_data):
               {"type": "pause_subscription", "series_id": "out-nope"},
               {"type": "drop_database"}):
         assert not client.post(f"/api/users/{uid}/actions", json={"action": a}).json()["ok"], a
+
+
+def test_demo_subscriptions_are_detected_and_pausable(client, user_with_data):
+    from app.db import SessionLocal
+    from app.models import User
+    from app.seed import add_subscriptions
+    uid = user_with_data["id"]
+    db = SessionLocal()
+    try:
+        n = add_subscriptions(db, db.get(User, uid), [("Netflix", 10.99, 3), ("Spotify Premium", 11.99, 9)])
+        assert n > 0 and add_subscriptions(db, db.get(User, uid), [("Netflix", 10.99, 3), ("Spotify Premium", 11.99, 9)]) == 0  # idempotent
+    finally:
+        db.close()
+    subs = {s["name"]: s for s in client.get(f"/api/users/{uid}/expenses").json()["subscriptions"]}
+    assert {"Netflix", "Spotify Premium"} <= set(subs) and not subs["Netflix"]["essential"]
+    r = client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": subs["Netflix"]["series_id"]}}).json()
+    assert r["ok"]

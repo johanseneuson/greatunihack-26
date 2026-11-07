@@ -1,0 +1,23 @@
+.callbtn{min-width:48px;min-height:48px;border-radius:12px;border:0;background:#fff;color:var(--brand);font-weight:700;padding:0 14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.top .actions{display:flex;gap:8px}
+.call{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(24px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 30%,#6b2d94,#2a0c3d 70%);color:#fff;text-align:center}
+.call[hidden]{display:none}
+.call .who{font-size:1.1rem;font-weight:700;margin:0}.call .sub2{opacity:.8;font-size:.9rem;margin:2px 0 0}
+.orb{--lvl:0;width:min(56vw,230px);aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#f3e1ff,#b980e6 55%,#7a3da3);box-shadow:0 0 0 calc(10px + var(--lvl)*38px) rgba(255,255,255,.12),0 0 60px rgba(185,128,230,.6);transition:box-shadow .08s linear,transform .3s}
+[data-state=listening] .orb{animation:breathe 2.4s ease-in-out infinite}
+[data-state=thinking] .orb{animation:spin 1.2s linear infinite;background:conic-gradient(from 0deg,#b980e6,#f3e1ff,#7a3da3,#b980e6)}
+[data-state=speaking] .orb{animation:talk .9s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.04)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes talk{0%,100%{transform:scale(1)}30%{transform:scale(1.07)}60%{transform:scale(.97)}}
+@media (prefers-reduced-motion:reduce){.orb{animation:none!important}}
+.callstatus{font-size:.95rem;opacity:.9;min-height:1.4em}
+.caps{width:100%;max-width:520px;min-height:9.5em;display:flex;flex-direction:column;gap:10px}
+.you{opacity:.65;font-size:.95rem;min-height:1.4em}.bot{font-size:1.2rem;line-height:1.4}
+.pend{width:100%;max-width:520px;background:rgba(255,255,255,.14);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.pend[hidden]{display:none}.pend p{margin:0;font-weight:600}.pend div{display:flex;gap:8px;justify-content:center}
+.pend button{min-height:48px;padding:0 22px;border-radius:99px;border:0;font-weight:700;cursor:pointer}
+#callYes{background:#fff;color:var(--brand)}#callNo{background:transparent;color:#fff;border:1px solid #fff}
+.ctl{display:flex;gap:28px;align-items:center}
+.ctl button{width:64px;height:64px;border-radius:50%;border:0;font-size:1.5rem;cursor:pointer;background:rgba(255,255,255,.18);color:#fff}
+.ctl button[aria-pressed=true]{background:#fff;color:#b3261e}
+.ctl #callEnd{background:#d93025;width:72px;height:72px}
+.tog{font-size:.85rem;opacity:.85;display:flex;gap:8px;align-items:center;min-height:44px}.tog input{width:20px;height:20px}

@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     coach_enabled: bool = True
     chat_model: str = "claude-haiku-5-5"  # chat assistant (RAG + actions): small and cheap
 
+    # Call mode (voice): ElevenLabs text-to-speech. Without a key the browser's built-in voice is used instead.
+    elevenlabs_api_key: str | None = None
+    elevenlabs_voice_id: str = "ZF6FPAbjXT4488VcRRnw"
+    elevenlabs_model: str = "eleven_flash_v2_5"  # low latency, 32 languages
+
 
 settings = Settings()
 settings.data_dir.mkdir(parents=True, exist_ok=True)

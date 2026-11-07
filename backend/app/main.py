@@ -23,7 +23,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="NatWest API",
+    title="NatEast API",
     version="0.1.0",
     description=(
         "Personalised budgeting and **financial time travel**: upload statements or link a bank, "

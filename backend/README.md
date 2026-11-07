@@ -1,4 +1,4 @@
-# NatWest - Backend
+# NatEast - Backend
 
 FastAPI service that turns a user's transaction history into **personalised budgets** and **financial time travel**: a probabilistic forecast of their future balance that flags hardship and unexpected costs *before* they happen, and shows (positively) what their future looks like.
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertCard } from '../components/AlertCard'
 import { ChatPanel } from '../components/ChatPanel'
+import { SupportCard } from '../components/SupportCard'
 import { PageHead, Segmented } from '../components/ui'
 import type { Dashboard, Severity } from '../lib/types'
 
@@ -13,6 +14,7 @@ export default function Assistant({ d }: { d: Dashboard }) {
   return (
     <div className="page narrow">
       <PageHead title="Assistant" />
+      <SupportCard />
       <ChatPanel tall />
       <details className="warn-fold">
         <summary>Early warnings &amp; insights ({d.warnings.length})</summary>

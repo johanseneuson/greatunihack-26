@@ -26,6 +26,7 @@ class User(Base):
     savings_buffer_target: Mapped[float | None] = mapped_column(Float)  # "never go below" amount
     challenges: Mapped[list] = mapped_column(JSON, default=list)  # e.g. ["irregular_income", "debt", "new_baby"]
     notes: Mapped[str | None] = mapped_column(Text)  # free text about their situation, fed to the AI coach
+    address_as: Mapped[str | None] = mapped_column(String(60))  # how the assistant addresses them, e.g. "guys" for a group
 
     accounts: Mapped[list["Account"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     goals: Mapped[list["Goal"]] = relationship(back_populates="user", cascade="all, delete-orphan")

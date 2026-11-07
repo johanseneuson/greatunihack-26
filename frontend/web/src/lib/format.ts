@@ -26,6 +26,8 @@ export const greeting = (date = new Date()) => {
   return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
 }
 export const firstName = (name: string) => name.split(' ')[0]
+/** How to address the user: a group is addressed as e.g. "guys", a person by first name. */
+export const callName = (u: { name: string; address_as?: string | null }) => u.address_as || firstName(u.name)
 export const initials = (name: string) => name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 
 /** One tick per month: the first data point of each calendar month (avoids "Nov Nov Dec Dec" axes). */

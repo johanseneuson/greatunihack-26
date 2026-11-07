@@ -204,7 +204,10 @@ export interface ExpenseSub {
   series_id: string; name: string; category: string; period: string; amount: number; next_date: string
   essential: boolean; paused: boolean; kind: 'essential' | 'subscription' | 'income'
 }
-export interface SupportOption { id: string; name: string; why: string; what: string; link: string; check: string }
+export interface SupportOption {
+  id: string; name: string; why: string; what: string; link: string; check: string
+  apply_url: string; steps: string[]; draft: string
+}
 export interface PlannedItem { id: number; date: string; description: string; amount: number; essential: boolean }
 export interface PastItem { date: string; name: string; category: string; amount: number }
 export interface ExpensesData {
@@ -223,6 +226,8 @@ export interface Opportunity {
   id: string; name: string; category: string; category_label: string
   why: string; what: string; link: string; link_label: string; check: string
   checks: EligibilityCheck[]; value: string | null; confidence: 'strong' | 'worth_checking'; priority: number
+  // How to apply (steps, official page, ready-to-send message) - shown in ApplySheet
+  apply_url: string; steps: string[]; draft: string
 }
 export interface Opportunities {
   summary: { count: number; strong: number; categories: string[]; headline: string; intro: string }

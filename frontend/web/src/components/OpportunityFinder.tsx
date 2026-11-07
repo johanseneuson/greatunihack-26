@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, ChevronDown, CircleHelp, MessageCircleHeart, Sparkles, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, ChevronDown, CircleHelp, ClipboardList, MessageCircleHeart, Sparkles, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ApplySheet } from './ApplySheet'
 import { useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
@@ -52,6 +53,7 @@ export function OpportunityFinder() {
 
 function OpportunityItem({ o }: { o: Opportunity }) {
   const [open, setOpen] = useState(false)
+  const [applying, setApplying] = useState(false)
   const { ask } = useChat()
   const navigate = useNavigate()
   const askLydia = () => {
@@ -72,6 +74,9 @@ function OpportunityItem({ o }: { o: Opportunity }) {
             {o.link_label || 'Check your eligibility'} <ArrowUpRight size={14} />
           </a>
         )}
+        {(o.steps.length > 0 || o.draft) && (
+          <button className="opp-text-btn" onClick={() => setApplying(true)}><ClipboardList size={14} /> Apply</button>
+        )}
         <button className="opp-text-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           Eligibility checks <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : undefined, transition: 'transform .15s' }} />
         </button>
@@ -86,6 +91,7 @@ function OpportunityItem({ o }: { o: Opportunity }) {
           {o.check && <p className="tiny muted" style={{ margin: '8px 0 0' }}>{o.check}</p>}
         </div>
       )}
+      {applying && <ApplySheet option={o} onClose={() => setApplying(false)} />}
     </article>
   )
 }

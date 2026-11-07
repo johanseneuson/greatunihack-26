@@ -111,3 +111,26 @@ tests/              offline tests with a synthetic statement
 - **Auth:** there is none yet. Users are addressed by id, which is fine for the demo but must be added before real data.
 - **Data licences:** the household dataset's licence is listed as "Unknown" on Kaggle, so we use it only as demo data and don't commit it (it's downloaded at runtime). The everyday-spending dataset is Apache 2.0. Amounts are shown as £ for the UK demo, whatever currency the source used.
 - This is guidance, not regulated financial advice.
+
+## Chat assistant (RAG) and the web app
+
+`app/services/chat/` is a retrieval-augmented assistant over **one user's own data**: profile, balance, forecast, detected recurring payments and subscriptions, planned expenses, warnings, budget, recent transactions, plus a small UK guidance knowledge base in `data/knowledge/*.md`. It is rebuilt on every question, so changes show up immediately.
+
+| Piece | File |
+|---|---|
+| Documents built from the analytics context | `corpus.py` |
+| BM25 retrieval (core docs always included) | `retrieval.py` |
+| Prompt, tool use, brevity, one corrective retry | `assistant.py` |
+| Deterministic check: every £ figure in a reply must come from the context (or a sum/difference of it) | `grounding.py` |
+| Actions the assistant can **propose**: pause/resume a non-essential subscription, add/remove a planned expense. Run only after the user taps Confirm, and re-validated server-side. Essential bills can't be cancelled | `actions.py` |
+
+```
+POST /api/users/{id}/chat      {"messages":[{"role":"user","content":"..."}], "language":"English", "plain":false}
+                               -> {reply, sources, mode: llm|offline, grounded, actions:[{action, label}]}
+POST /api/users/{id}/actions   {"action": {...}}   (the `action` object from a proposal)
+GET  /api/users/{id}/expenses  upcoming payments, subscriptions (with paused state), planned expenses, past transactions
+```
+
+Paused subscriptions (`paused_series`) and planned expenses (`planned_expenses`) are applied to every forecast as standing adjustments (`UserContext.standing`), so the dashboard, warnings and what-ifs all reflect them.
+
+The mobile-first web app in `../frontend` is served by the same server at **http://localhost:8000/app/**. It uses a small model (`CHAT_MODEL`, default `claude-haiku-5-5`). Without an API key the chat falls back to a basic answer built from the same data.

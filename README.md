@@ -1,18 +1,16 @@
-# Finance Buddy (NatWest challenge MVP)
+# Finance Buddy (NatWest challenge)
 
-Mobile-first web app: an AI money coach that uses retrieval-augmented generation (RAG) over the user's own finances plus a small knowledge base of UK guidance.
+An AI money coach for people underserved by financial services. Mobile-first web app + FastAPI backend.
+
+- `backend/` FastAPI service: transactions, recurring-payment detection, Monte Carlo "financial time travel" forecast, warnings, budgets, and the **RAG chat assistant** with confirmable actions. See `backend/README.md`.
+- `frontend/` plain HTML/CSS/JS web app (Coach chat + proactive cards, Expenses tab), served by the backend at `/app/`.
 
 ## Run
     cd backend
-    cp .env.example .env     # add ANTHROPIC_API_KEY (optional; without it the app runs in offline mode)
-    node server.js           # http://localhost:3000  (no npm install needed, Node 20+)
+    python -m venv .venv && .venv/Scripts/activate      # macOS/Linux: source .venv/bin/activate
+    pip install -r requirements-dev.txt
+    cp .env.example .env        # add ANTHROPIC_API_KEY (optional; basic mode without it)
+    uvicorn app.main:app --port 8000
+    # open http://localhost:8000/app/   (API docs: /docs)
 
-## How it works
-- `backend/db.js` SQLite database (built-in `node:sqlite`, auto-created and seeded): `transactions` (past), `recurring` (bills/subscriptions/debt, past and future), `planned_expenses` (future one-offs). The Expenses tab edits it and the coach reads it.
-- `backend/data/` demo profile, seed transactions (`npm run seed` regenerates) and `knowledge/*.md` guidance.
-- `backend/rag.js` builds a corpus from profile + account summaries + transactions + guidance and retrieves with BM25.
-- `backend/llm.js` sends the retrieved passages to Claude with a coaching system prompt; answers cite sources.
-- `backend/finance.js` computes balances, upcoming bills, payday low point (the LLM is given these numbers, it does not do the maths).
-- `frontend/` responsive chat UI with proactive cards, language choice, extra-simple mode, large text, high contrast, voice input.
-
-Demo data is fictional. Guidance only, not regulated financial advice.
+Guidance only, not regulated financial advice. Demo data is public Kaggle data / fictional.

@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ...models import Account, Transaction, User
+from ...models import Account, PausedSeries, PlannedExpense, Transaction, User
 from ..categories import group_of, merchant_key
 from .recurring import RecurringSeries, detect_recurring
 
@@ -64,6 +64,8 @@ class UserContext:
     buffer_target: float
     history_days: int
     cache: dict = field(default_factory=dict)
+    # Standing decisions made in the app (paused subscriptions, planned one-offs). Applied to every forecast.
+    standing: tuple = ()
 
     @property
     def has_data(self) -> bool:
@@ -103,7 +105,10 @@ def build_context(db: Session, user: User) -> UserContext:
         select(func.count(Transaction.id), func.max(Transaction.id), func.sum(Transaction.amount))
         .where(Transaction.user_id == user.id)
     ).one()
-    key = (user.id, stats[0], stats[1], round(stats[2] or 0, 2), repr(ProfileSnapshot.of(user)),
+    paused = tuple(sorted(db.scalars(select(PausedSeries.series_id).where(PausedSeries.user_id == user.id)).all()))
+    planned = tuple((p.id, p.date, p.description, p.amount) for p in
+                    db.scalars(select(PlannedExpense).where(PlannedExpense.user_id == user.id).order_by(PlannedExpense.date)).all())
+    key = (user.id, stats[0], stats[1], round(stats[2] or 0, 2), repr(ProfileSnapshot.of(user)), paused, planned,
            tuple((a.id, a.opening_balance) for a in user.accounts),
            tuple((g.id, g.target_amount, g.saved_amount, g.target_date) for g in user.goals))
     if key in _CACHE:
@@ -151,6 +156,8 @@ def build_context(db: Session, user: User) -> UserContext:
         user=ProfileSnapshot.of(user), df=df, flows=flows, as_of=as_of, recurring=recurring, balance=round(balance, 2),
         balance_source=balance_source, monthly_income=round(monthly_income, 2), income_source=income_source,
         essential_monthly=round(essential_monthly, 2), buffer_target=buffer_target, history_days=history_days,
+        standing=tuple({"type": "cancel_recurring", "series_id": sid} for sid in paused)
+        + tuple({"type": "one_off", "amount": amt, "date": d, "label": desc, "category": "Planned"} for _, d, desc, amt in planned),
     )
     if len(_CACHE) > 64:
         _CACHE.clear()

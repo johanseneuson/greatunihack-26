@@ -1,10 +1,12 @@
+// Finance Buddy web app. Talks to the FastAPI backend on the same origin (/api/users/{id}/...).
 const $ = s => document.querySelector(s);
 const gbp = n => (n < 0 ? '-£' : '£') + Math.abs(n).toFixed(2);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const history = [];
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { } } };
 const RTL = ['العربية', 'Urdu (اردو)'];
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+let history = [], uid = store.get('fb_who') || '2', firstName = '';
+const api = p => `/api/users/${uid}${p}`;
 
 // ---- settings / accessibility ----
 const root = document.documentElement;
@@ -23,6 +25,8 @@ applySettings();
 $('#settingsBtn').onclick = () => {
   const s = $('#settings'); s.hidden = !s.hidden; $('#settingsBtn').setAttribute('aria-expanded', String(!s.hidden));
 };
+$('#who').value = uid;
+$('#who').onchange = () => { uid = $('#who').value; store.set('fb_who', uid); history = []; $('#log').innerHTML = ''; $('#chips').innerHTML = ''; loadHome().then(firstRun); if (!$('#money').hidden) loadMoney(); };
 
 // ---- chat ----
 function bubble(role, text, extra) {
@@ -41,10 +45,10 @@ function actionCard(a) {
   no.onclick = () => { d.remove(); history.push({ role: 'user', content: '[I declined: ' + a.label + ']' }); };
   yes.onclick = async () => {
     yes.disabled = no.disabled = true;
-    const r = await post('/api/actions', { action: a.action }), j = await r.json();
+    const r = await post(api('/actions'), { action: a.action }), j = await r.json();
     d.remove();
-    bubble('bot', (r.ok ? '✓ ' : '') + j.message);
-    history.push({ role: 'user', content: '[I confirmed and it was done: ' + a.label + ']' });
+    bubble('bot', (j.ok ? '✓ ' : '') + j.message);
+    history.push({ role: 'user', content: '[I ' + (j.ok ? 'confirmed and it was done' : 'tried but it failed') + ': ' + a.label + ']' });
     loadHome(); if (!$('#money').hidden) loadMoney();
   };
   row.append(yes, no); d.append(p, row);
@@ -69,7 +73,7 @@ async function ask(q) {
   const t = document.createElement('div'); t.className = 'msg bot typing'; t.setAttribute('aria-label', 'Finance Buddy is typing'); t.innerHTML = '<i></i><i></i><i></i>';
   $('#log').append(t); t.scrollIntoView({ block: 'end' });
   try {
-    const r = await post('/api/chat', { messages: history, language: $('#lang').value, plain: $('#plain').checked });
+    const r = await post(api('/chat'), { messages: history.slice(-20), language: $('#lang').value, plain: $('#plain').checked });
     if (!r.ok) throw new Error(r.status);
     const j = await r.json();
     history.push({ role: 'assistant', content: j.reply });
@@ -97,26 +101,30 @@ if (SR) {
   };
 }
 
-// ---- home data ----
+// ---- home: balance, safe-to-spend and early warnings from the backend's analytics ----
+const LEVEL = { critical: 'warn', warning: 'warn', info: 'tip', positive: 'goal' };
 async function loadHome() {
   try {
-    const { snapshot: s, insights } = await (await fetch('/api/insights')).json();
-    $('#bal').textContent = gbp(s.balance); $('#sav').textContent = gbp(s.savingsPot);
-    $('#od').textContent = s.balance < 0 ? `In overdraft (limit ${gbp(s.overdraftLimit)})` : `Overdraft limit ${gbp(s.overdraftLimit)}`;
+    const d = await (await fetch(api('/insights/dashboard'))).json();
+    const o = d.overview; firstName = o.user.name.split(' ')[0];
+    $('#bal').textContent = gbp(o.balance);
+    const s = d.budget && d.budget.safe_to_spend;
+    $('#sav').textContent = s ? gbp(s.today) : '–';
+    $('#od').textContent = d.resilience ? `Resilience ${d.resilience.score}/100 · ${d.resilience.label}` : '';
     const cards = $('#cards'); cards.innerHTML = '';
-    insights.forEach(i => {
-      const c = document.createElement('div'); c.className = 'card ' + i.level;
-      const h = document.createElement('h3'); h.textContent = i.title;
-      const p = document.createElement('p'); p.textContent = i.body;
+    (d.warnings || []).slice(0, 6).forEach(w => {
+      const c = document.createElement('div'); c.className = 'card ' + (LEVEL[w.severity] || 'tip');
+      const h = document.createElement('h3'); h.textContent = w.title;
+      const p = document.createElement('p'); p.textContent = w.message + (w.upside ? ' ' + w.upside : '');
       const b = document.createElement('button'); b.textContent = 'Help me with this';
-      b.onclick = () => { ask(i.ask); $('#chat').scrollIntoView({ behavior: 'smooth' }); };
+      b.onclick = () => { ask(`Help me with this: ${w.title}`); $('#chat').scrollIntoView({ behavior: 'smooth' }); };
       c.append(h, p, b); cards.append(c);
     });
   } catch { $('#cards').textContent = 'Could not load your insights.'; }
 }
 function firstRun() {
-  bubble('bot', 'Hi Maya, I am your Finance Buddy. I can see your account, your bills and what is coming up, so I can give advice that fits your life. What would you like help with?');
-  ['Can I afford £30 this week?', 'Where does my money go?', 'Help me save £500', 'What help can I get?'].forEach(q => {
+  bubble('bot', `Hi ${firstName || 'there'}, I am your Finance Buddy. I can see your account, your bills and what is coming up, so I can give advice that fits your life. What would you like help with?`);
+  ['Can I afford £30 this week?', 'Where does my money go?', 'Which subscriptions could I cut?', 'What help can I get?'].forEach(q => {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); $('#chips').append(b);
   });
 }
@@ -131,7 +139,7 @@ function showTab(name) {
 $('#t-coach').onclick = () => showTab('coach');
 $('#t-money').onclick = () => showTab('money');
 
-// ---- expenses & subscriptions (past and future; the coach reads the same database) ----
+// ---- expenses & subscriptions (past and future; the coach reads the same data) ----
 let view = 'upcoming', moneyData = null;
 const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
@@ -139,7 +147,7 @@ document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   renderMoney();
 });
-async function loadMoney() { moneyData = await (await fetch('/api/expenses')).json(); renderMoney(); }
+async function loadMoney() { moneyData = await (await fetch(api('/expenses'))).json(); renderMoney(); }
 function itemHtml(name, detail, amt, extra = '', off = false) {
   return `<div class="item${off ? ' off' : ''}"><span class="n">${esc(name)}</span><span class="a${amt > 0 ? ' pos' : ''}">${gbp(amt)}</span><span class="d">${esc(detail)}</span>${extra}</div>`;
 }
@@ -148,36 +156,39 @@ function renderMoney() {
   let h = '';
   $('#addForm').hidden = view !== 'upcoming';
   if (view === 'upcoming') {
-    const tot = moneyData.upcoming.filter(u => u.inDays <= 30).reduce((a, u) => a + u.amount, 0);
-    h += `<div class="sum">Next 30 days: ${gbp(-tot)} going out</div>`;
+    const out = moneyData.upcoming.filter(u => u.in_days <= 30 && u.amount < 0).reduce((a, u) => a + u.amount, 0);
+    h += `<div class="sum">Next 30 days: ${gbp(-out)} going out</div>`;
     moneyData.upcoming.forEach(u => {
-      const del = u.kind === 'planned' ? `<div class="act"><button data-del="${u.id}" aria-label="Remove ${esc(u.name)}">Remove</button></div>` : '';
-      h += itemHtml(u.name, `${fmtDate(u.date)} · in ${u.inDays} days · ${u.kind}${u.essential ? ' · essential' : ''}`, u.amount, del);
+      const del = u.planned_id ? `<div class="act"><button data-del="${u.planned_id}" aria-label="Remove ${esc(u.name)}">Remove</button></div>` : '';
+      h += itemHtml(u.name, `${fmtDate(u.date)} · in ${u.in_days} days · ${u.kind}${u.essential ? ' · essential' : ''}`, u.amount, del);
     });
+    if (!moneyData.upcoming.length) h += '<p class="fine">Nothing scheduled yet.</p>';
   } else if (view === 'subs') {
-    const act = moneyData.subscriptions.filter(r => r.active), mo = act.reduce((a, r) => a + r.amount, 0);
-    h += `<div class="sum">Active: ${gbp(-mo)} a month (${gbp(-mo * 12)} a year)</div>`;
+    const act = moneyData.subscriptions.filter(r => !r.paused), mo = act.reduce((a, r) => a + r.amount, 0);
+    h += `<div class="sum">Active subscriptions and bills: ${gbp(mo)} a typical period (paused ones excluded)</div>`;
     moneyData.subscriptions.forEach(r => {
-      const btn = r.essential ? '' : `<div class="act"><button data-sub="${r.id}" data-active="${r.active ? 0 : 1}">${r.active ? 'Pause / cancel' : 'Switch back on'}</button></div>`;
-      h += itemHtml(r.merchant, `Day ${r.day_of_month} monthly · ${r.type}${r.essential ? ' · essential' : ''}${r.note ? ' · ' + r.note : ''}${r.active ? '' : ' · PAUSED'}`, r.amount, btn, !r.active);
+      const btn = r.essential ? '' : `<div class="act"><button data-sub="${r.series_id}" data-pause="${r.paused ? 0 : 1}">${r.paused ? 'Switch back on' : 'Pause / cancel'}</button></div>`;
+      h += itemHtml(r.name, `${r.period} · next ${fmtDate(r.next_date)} · ${r.kind}${r.paused ? ' · PAUSED' : ''}`, -r.amount, btn, r.paused);
     });
+    if (!moneyData.subscriptions.length) h += '<p class="fine">No recurring payments detected yet.</p>';
   } else {
     let last = '';
     moneyData.past.forEach(t => {
       const m = new Date(t.date + 'T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
       if (m !== last) { h += `<div class="mh">${m}</div>`; last = m; }
-      h += itemHtml(t.merchant, `${fmtDate(t.date)} · ${t.category}`, t.amount);
+      h += itemHtml(t.name, `${fmtDate(t.date)} · ${t.category}`, t.amount);
     });
   }
   const l = $('#mlist'); l.innerHTML = h;
-  l.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { await fetch('/api/planned/' + b.dataset.del, { method: 'DELETE' }); loadMoney(); loadHome(); });
-  l.querySelectorAll('[data-sub]').forEach(b => b.onclick = async () => { await post(`/api/recurring/${b.dataset.sub}/active`, { active: b.dataset.active === '1' }); loadMoney(); loadHome(); });
+  const run = async action => { await post(api('/actions'), { action }); loadMoney(); loadHome(); };
+  l.querySelectorAll('[data-del]').forEach(b => b.onclick = () => run({ type: 'remove_planned_expense', planned_id: +b.dataset.del }));
+  l.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => run({ type: b.dataset.pause === '1' ? 'pause_subscription' : 'resume_subscription', series_id: b.dataset.sub }));
 }
 $('#addForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const r = await post('/api/planned', { description: $('#aDesc').value, amount: $('#aAmt').value, date: $('#aDate').value, essential: $('#aEss').checked });
+  const r = await (await post(api('/actions'), { action: { type: 'add_planned_expense', description: $('#aDesc').value, amount: +$('#aAmt').value, date: $('#aDate').value, essential: $('#aEss').checked } })).json();
   if (r.ok) { e.target.reset(); $('#aErr').textContent = ''; loadMoney(); loadHome(); }
-  else $('#aErr').textContent = 'Please check the details and try again.';
+  else $('#aErr').textContent = r.message;
 });
 
-loadHome(); firstRun();
+loadHome().then(firstRun);

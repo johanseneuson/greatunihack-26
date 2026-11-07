@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     coach_model: str = "claude-opus-5-5"
     coach_enabled: bool = True
+    chat_model: str = "claude-haiku-5-5"  # chat assistant (RAG + actions): small and cheap
 
 
 settings = Settings()

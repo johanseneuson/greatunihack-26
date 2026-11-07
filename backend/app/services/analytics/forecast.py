@@ -153,7 +153,7 @@ def run_forecast(
     adjustments: list[Adjustment] | None = None,
     seed: int | None = None,
 ) -> ForecastResult:
-    adjustments = adjustments or []
+    adjustments = [Adjustment(**a) for a in ctx.standing] + list(adjustments or [])  # standing app decisions + what-if changes
     rng = np.random.default_rng(seed if seed is not None else ctx.user.id * 7919 + 17)
     H, S = int(horizon_days), int(sims)
     start = ctx.as_of + pd.Timedelta(days=1)

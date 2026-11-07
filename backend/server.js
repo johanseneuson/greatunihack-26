@@ -37,6 +37,11 @@ http.createServer(async (req, res) => {
     if ((m = url.pathname.match(/^\/api\/recurring\/(\d+)\/active$/)) && req.method === 'POST') {
       const b = await readJson(req); D.run('UPDATE recurring SET active=? WHERE id=?', b.active ? 1 : 0, +m[1]); return send(res, 200, { ok: true });
     }
+    if (url.pathname === '/api/actions' && req.method === 'POST') {
+      const { action } = await readJson(req);
+      const r = require('./actions').execute(action);
+      return send(res, r.ok ? 200 : 400, r);
+    }
     if (url.pathname === '/api/chat' && req.method === 'POST') {
       const { messages, language, plain } = await readJson(req);
       if (!Array.isArray(messages) || !messages.length) return send(res, 400, { error: 'messages required' });

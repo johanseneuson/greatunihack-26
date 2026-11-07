@@ -39,12 +39,12 @@ function buildCorpus() {
     `Cautious projection for the next 14 days: start ${gbp(s.balance)}, minus bills and planned costs ${gbp(s.billsNext14)}, minus about ${gbp(s.dailyEssentials)} a day on groceries and transport, plus two pay weeks at the lowest normal week (${gbp(s.expectedPay)}) gives about ${gbp(s.projected14)}.`);
   const subs = F.subscriptions();
   add('account', 'account', 'Subscriptions and recurring bills',
-    subs.map(r => `${r.merchant} (${r.type}${r.essential ? ', essential' : ''}) ${gbp(r.amount)} monthly on day ${r.day_of_month}, ${r.active ? 'active' : 'PAUSED'}${r.note ? '. Note: ' + r.note : ''}`).join('\n') +
+    subs.map(r => `id=${r.id} ${r.merchant} (${r.type}${r.essential ? ', essential' : ''}) ${gbp(r.amount)} monthly on day ${r.day_of_month}, ${r.active ? 'active' : 'PAUSED'}${r.note ? '. Note: ' + r.note : ''}`).join('\n') +
     `\nActive subscriptions cost ${gbp(s.subsMonthly)} a month.`);
   add('account', 'account', 'Upcoming expenses and subscriptions (next 45 days)',
     s.upcoming.map(u => `${dd(u.date)} (in ${u.inDays} days) ${u.name} ${gbp(u.amount)} [${u.kind}${u.essential ? ', essential' : ''}]`).join('\n'));
   const pl = F.planned();
-  if (pl.length) add('account', 'account', 'Planned one-off expenses', pl.map(x => `${dd(x.date)} ${x.description} ${gbp(x.amount)}${x.essential ? ' (essential)' : ''}`).join('; '));
+  if (pl.length) add('account', 'account', 'Planned one-off expenses', pl.map(x => `id=${x.id} ${dd(x.date)} ${x.description} ${gbp(x.amount)}${x.essential ? ' (essential)' : ''}`).join('; '));
   const groups = {};
   F.transactions().reverse().forEach(t => { const k = t.date.slice(0, 7) + ' ' + t.category; (groups[k] = groups[k] || []).push(t); });
   Object.entries(groups).forEach(([k, list]) =>
@@ -74,7 +74,7 @@ function search(query, k = 5) {
     .filter(x => x.sc > 0)
     .sort((a, b) => b.sc - a.sc);
   const picked = scored.slice(0, k).map(x => x.d);
-  const core = docs.filter(d => d.kind === "profile" || (d.kind === "account" && /position|subscriptions|Upcoming|Planned|projection/.test(d.title)));
+  const core = docs.filter(d => d.kind === "profile" || (d.kind === "account" && /position|subscriptions|upcoming|planned|projection/i.test(d.title)));
   return [...core, ...picked.filter(d => !core.includes(d))].slice(0, core.length + k);
 }
 module.exports = { search };

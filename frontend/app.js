@@ -31,15 +31,34 @@ function bubble(role, text, extra) {
   $('#log').append(d); d.scrollIntoView({ block: 'end', behavior: 'smooth' });
   return d;
 }
-function sourcesEl(sources, mode) {
+// A proposed action from the coach. Nothing happens until the user taps Confirm; the server re-checks it first.
+function actionCard(a) {
+  const d = document.createElement('div'); d.className = 'msg bot action';
+  const p = document.createElement('p'); p.textContent = a.label;
+  const row = document.createElement('div'); row.className = 'arow';
+  const yes = document.createElement('button'); yes.className = 'primary'; yes.textContent = 'Confirm';
+  const no = document.createElement('button'); no.className = 'ghost'; no.textContent = 'No thanks';
+  no.onclick = () => { d.remove(); history.push({ role: 'user', content: '[I declined: ' + a.label + ']' }); };
+  yes.onclick = async () => {
+    yes.disabled = no.disabled = true;
+    const r = await post('/api/actions', { action: a.action }), j = await r.json();
+    d.remove();
+    bubble('bot', (r.ok ? '✓ ' : '') + j.message);
+    history.push({ role: 'user', content: '[I confirmed and it was done: ' + a.label + ']' });
+    loadHome(); if (!$('#money').hidden) loadMoney();
+  };
+  row.append(yes, no); d.append(p, row);
+  $('#log').append(d); d.scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+function sourcesEl(sources, mode, grounded) {
   const w = document.createElement('div');
   const det = document.createElement('details'); det.className = 'src';
-  det.innerHTML = '<summary>Where this came from</summary>';
+  det.innerHTML = '<summary>What I looked at</summary>';
   const ol = document.createElement('ol');
   sources.forEach(s => { const li = document.createElement('li'); li.value = s.n; li.textContent = `${s.title} (${s.kind === 'knowledge' ? 'guidance' : s.kind === 'profile' ? 'your profile' : 'your account'})`; ol.append(li); });
   det.append(ol); w.append(det);
   const b = document.createElement('div'); b.className = 'badge';
-  b.textContent = mode === 'llm' ? 'AI answer using your data' : 'Basic answer (AI not connected)';
+  b.textContent = mode !== 'llm' ? 'Basic answer (AI not connected)' : grounded === false ? 'Numbers could not be verified, so I kept it to facts' : 'AI answer. Figures checked against your data';
   w.append(b); return w;
 }
 async function ask(q) {
@@ -54,7 +73,8 @@ async function ask(q) {
     if (!r.ok) throw new Error(r.status);
     const j = await r.json();
     history.push({ role: 'assistant', content: j.reply });
-    t.remove(); bubble('bot', j.reply, sourcesEl(j.sources, j.mode));
+    t.remove(); bubble('bot', j.reply, sourcesEl(j.sources, j.mode, j.grounded));
+    (j.actions || []).forEach(a => actionCard(a));
   } catch {
     t.remove(); bubble('bot', 'Sorry, I could not reach the server. Please try again.');
     history.pop();

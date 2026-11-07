@@ -17,4 +17,7 @@
 .add label{display:grid;gap:4px;font-size:.9rem}.add label.row{display:flex}
 .add input:not([type=checkbox]){min-height:48px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff}
 .primary{min-height:48px;border:0;border-radius:99px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+.msg.action{border:2px solid var(--brand);background:var(--goalbg)}.msg.action p{margin:0 0 8px;font-weight:600}
+.arow{display:flex;gap:8px}.arow .primary{padding:0 20px}.ghost{min-height:48px;padding:0 16px;border-radius:99px;border:1px solid var(--brand);background:#fff;color:var(--brand);cursor:pointer}
+.arow button:disabled{opacity:.5}
 .pad{margin-top:16px}.err{color:var(--warn);font-weight:600;margin:0}

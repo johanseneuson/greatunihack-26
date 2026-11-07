@@ -1,0 +1,94 @@
+/* Design tokens - NatWest-inspired palette (from the hackathon design kit), our own product.
+   Mirrored in src/lib/theme.ts so the future Expo app can share the same values. */
+:root {
+  --primary: #5e10b1;
+  --primary-strong: #3c1053;
+  --primary-soft: #ede4f8;
+  --secondary: #3c7b8a;
+  --secondary-soft: #e1eef1;
+
+  --ill-blue: #5b8ae6;
+  --ill-purple: #8e4fc0;
+  --ill-orange: #f5a83a;
+  --ill-pink: #ec737f;
+  --badge-pink: #f9dcdc;
+  --badge-plum: #8a3c7c;
+  --badge-blue: #3a5cc4;
+
+  --success: #1f8a4c;
+  --success-soft: #e2f4ea;
+  --warning: #c26a00;
+  --warning-soft: #fdf0dc;
+  --danger: #c8313d;
+  --danger-soft: #fbe4e6;
+
+  --bg: #f2f1f7;
+  --surface: #ffffff;
+  --surface-2: #f7f6fb;
+  --text: #1d1a22;
+  --text-muted: #6b6573;
+  --border: #e6e3ee;
+  --chart-light: #c3d3f5;
+  --chart-strong: #4c7ce3;
+  --header-grad: linear-gradient(160deg, #3c1053 0%, #5e10b1 70%, #7b2bd4 100%);
+  --shadow: 0 1px 2px rgba(29, 26, 34, 0.06), 0 2px 8px rgba(29, 26, 34, 0.04);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --primary: #b17cf0;
+    --primary-strong: #2a0f43;
+    --primary-soft: #33224a;
+    --secondary: #6fc1d3;
+    --secondary-soft: #1d3338;
+    --success: #4cc985;
+    --success-soft: #16301f;
+    --warning: #f5b65a;
+    --warning-soft: #3a2a12;
+    --danger: #ff7b86;
+    --danger-soft: #3d1b20;
+    --badge-pink: #4a2630;
+    --bg: #140f1c;
+    --surface: #221a2e;
+    --surface-2: #2b2238;
+    --text: #f3eefa;
+    --text-muted: #a99fb8;
+    --border: #372c47;
+    --chart-light: #3a4a72;
+    --chart-strong: #7ea2f0;
+    --header-grad: linear-gradient(160deg, #24093b 0%, #4a0f8c 75%, #6a22be 100%);
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --primary: #b17cf0;
+  --primary-strong: #2a0f43;
+  --primary-soft: #33224a;
+  --secondary: #6fc1d3;
+  --secondary-soft: #1d3338;
+  --success: #4cc985;
+  --success-soft: #16301f;
+  --warning: #f5b65a;
+  --warning-soft: #3a2a12;
+  --danger: #ff7b86;
+  --danger-soft: #3d1b20;
+  --badge-pink: #4a2630;
+  --bg: #140f1c;
+  --surface: #221a2e;
+  --surface-2: #2b2238;
+  --text: #f3eefa;
+  --text-muted: #a99fb8;
+  --border: #372c47;
+  --chart-light: #3a4a72;
+  --chart-strong: #7ea2f0;
+  --header-grad: linear-gradient(160deg, #24093b 0%, #4a0f8c 75%, #6a22be 100%);
+  --shadow: none;
+  color-scheme: dark;
+}

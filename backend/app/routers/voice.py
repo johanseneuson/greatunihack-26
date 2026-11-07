@@ -1,6 +1,7 @@
 """Call mode: text-to-speech through ElevenLabs. The API key stays on the server; the browser only gets audio."""
 import logging
 import re
+import threading
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -24,6 +25,20 @@ class SpeakRequest(BaseModel):
 def clean_for_speech(t: str) -> str:
     t = re.sub(r"[*_#`>\[\]]", "", t)
     return re.sub(r"\s+", " ", t).strip()
+
+
+def warm_up() -> None:
+    """Background no-op request so the first real call doesn't pay the cold-start delay."""
+    if not settings.elevenlabs_api_key:
+        return
+
+    def run():
+        try:
+            speak(SpeakRequest(text="Hello."))
+        except Exception as e:  # noqa: BLE001 - best effort only
+            log.info("voice warm-up skipped: %s", e)
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 @router.get("/voice/status")

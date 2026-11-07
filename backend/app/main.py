@@ -24,6 +24,7 @@ async def lifespan(_: FastAPI):
     init_db()
     if settings.seed_demo_users:
         seed_safely()
+    voice.warm_up()  # first ElevenLabs request is slow; do it now so the first call greeting is quick
     yield
 
 

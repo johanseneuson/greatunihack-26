@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 export function Card({ children, className = '', onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return <div className={`card ${className}`} onClick={onClick} role={onClick ? 'button' : undefined}>{children}</div>
@@ -65,7 +66,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-  return (
+  // Rendered on <body> so it is never styled by whatever opened it (for example the dark call screen).
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
@@ -74,7 +76,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

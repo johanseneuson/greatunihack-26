@@ -1,4 +1,4 @@
-import { Mic, MicOff, PhoneOff } from 'lucide-react'
+import { Mic, MicOff, PhoneOff, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { LANGUAGES, useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
@@ -6,7 +6,8 @@ import { api } from '../lib/api'
 import { BOT_NAME } from '../lib/brand'
 import { callName } from '../lib/format'
 import { isNo, isYes, phrases, spokenLanguage } from '../lib/phrases'
-import type { ProposedAction } from '../lib/types'
+import type { ProposedAction, SupportOption } from '../lib/types'
+import { ApplySheet } from './ApplySheet'
 
 // Call mode: talk to the assistant hands-free. Browser speech recognition listens, the same grounded assistant answers in a
 // short spoken style, and ElevenLabs speaks the reply (through the backend; the browser voice is the fallback).
@@ -27,6 +28,9 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
   const [muted, setMuted] = useState(false)
   const [talkOver, setTalkOver] = useState(true)
   const [pending, setPending] = useState<ProposedAction | null>(null)
+  const [apps, setApps] = useState<SupportOption[]>([])  // Apply buttons for the help being talked about
+  const [applying, setApplying] = useState<SupportOption | null>(null)
+  useEffect(() => { if (import.meta.env.DEV) (window as unknown as { __callApps?: typeof setApps }).__callApps = setApps }, [])
   const orb = useRef<HTMLButtonElement>(null)
   const chatRef = useRef(chat); chatRef.current = chat
   const name = useRef(user ? callName(user) : 'there'); name.current = user ? callName(user) : 'there'
@@ -145,8 +149,10 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
         if (isNo(text)) { chatRef.current.decline(p); return say(phrases(lang()).leave) }
         chatRef.current.decline(p) // they moved on to something else
       }
+      setApps([])
       const r = await chatRef.current.ask(text, { voice: true })
       if (!alive) return
+      setApps(r?.applications ?? [])
       if (!r) return say(phrases(lang()).lost)
       const a = r.actions[0]
       if (a) setPend(a)
@@ -188,7 +194,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
   }, [])
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('.sheet')) onClose() }
     window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
@@ -205,6 +211,12 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
         <div className="you">{you}</div>
         <div className="bot">{bot}</div>
       </div>
+      {apps.length > 0 && (
+        <div className="call-apply">
+          {apps.map((o) => <button key={o.id} className="btn" onClick={() => setApplying(o)}><Send size={15} /> Apply: {o.name}</button>)}
+        </div>
+      )}
+      {applying && <ApplySheet option={applying} onClose={() => setApplying(null)} />}
       {pending && (
         <div className="pend">
           <p>{pending.label}</p>

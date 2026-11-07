@@ -1,11 +1,11 @@
 import { Mic, MicOff, PhoneOff } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useChat } from '../context/ChatContext'
+import { LANGUAGES, useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import { BOT_NAME } from '../lib/brand'
 import { callName } from '../lib/format'
-import { isNo, isYes, phrases } from '../lib/phrases'
+import { isNo, isYes, phrases, spokenLanguage } from '../lib/phrases'
 import type { ProposedAction } from '../lib/types'
 
 // Call mode: talk to the assistant hands-free. Browser speech recognition listens, the same grounded assistant answers in a
@@ -31,11 +31,12 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
   const chatRef = useRef(chat); chatRef.current = chat
   const name = useRef(user ? callName(user) : 'there'); name.current = user ? callName(user) : 'there'
   const talkOverRef = useRef(true); talkOverRef.current = talkOver
-  const ctl = useRef({ interrupt: () => { }, toggleMute: () => { }, yes: () => { }, no: () => { } })
+  const [language, setLang] = useState(chat.language)
+  const ctl = useRef({ interrupt: () => { }, toggleMute: () => { }, yes: () => { }, no: () => { }, setLanguage: (_: string) => { } })
 
   useEffect(() => {
     let alive = true // StrictMode runs effects twice in dev; each run owns its own flag
-    const s = { phase: 'connecting' as Phase, gen: 0, muted: false, fatal: false, eleven: false, pending: null as ProposedAction | null, since: 0 }
+    const s = { phase: 'connecting' as Phase, gen: 0, muted: false, fatal: false, eleven: false, pending: null as ProposedAction | null, since: 0, lang: '' }
     let rec: any = null
     let audio: HTMLAudioElement | null = null
     let stream: MediaStream | null = null
@@ -44,7 +45,8 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
 
     const setP = (p: Phase, text?: string) => { s.phase = p; setPhase(p); setStatus(text ?? STATUS[p]) }
     const setPend = (a: ProposedAction | null) => { s.pending = a; setPending(a) }
-    const lang = () => chatRef.current.language
+    const lang = () => s.lang || chatRef.current.language
+    s.lang = chatRef.current.language
 
     const fail = (msg: string) => { s.fatal = true; setBot(msg); setP('error') }
 
@@ -134,6 +136,8 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
 
     async function handle(text: string) {
       setP('thinking'); setYou(text)
+      const to = spokenLanguage(text)
+      if (to && to !== lang()) return switchTo(to)
       const p = s.pending
       if (p) {
         setPend(null)
@@ -149,7 +153,14 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
       await say(a && !/[?؟？]\s*$/.test(r.reply) ? `${r.reply} ${phrases(lang()).ahead}` : r.reply)
     }
 
+    function switchTo(l: string) {
+      s.lang = l; setLang(l); chatRef.current.setLanguage(l)  // new language for speaking, listening and the assistant's replies
+      s.gen++; stopSpeaking(); stopListening()
+      void say(phrases(l).switched)
+    }
+
     ctl.current = {
+      setLanguage: (l: string) => { if (l !== lang()) switchTo(l) },
       interrupt,
       toggleMute: () => {
         s.muted = !s.muted; setMuted(s.muted)
@@ -201,6 +212,12 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
         </div>
       )}
       <div>
+        <label className="tog" style={{ gap: 8 }}>
+          <span>Language</span>
+          <select value={language} onChange={(e) => ctl.current.setLanguage(e.target.value)} aria-label="Call language" className="call-lang">
+            {LANGUAGES.map((l) => <option key={l}>{l}</option>)}
+          </select>
+        </label>
         <label className="tog"><input type="checkbox" checked={talkOver} onChange={(e) => setTalkOver(e.target.checked)} /> Let me talk over it</label>
         <div className="ctl">
           <button onClick={() => ctl.current.toggleMute()} aria-pressed={muted} aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}>{muted ? <MicOff size={26} /> : <Mic size={26} />}</button>

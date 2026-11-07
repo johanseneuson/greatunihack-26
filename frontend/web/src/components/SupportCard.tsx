@@ -1,10 +1,11 @@
-import { ExternalLink, HandHeart } from 'lucide-react'
+import { HandHeart, Send } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import { callName } from '../lib/format'
 import type { SupportOption } from '../lib/types'
+import { ApplySheet } from './ApplySheet'
 
 /** Real UK help this person may be able to get, matched to their own data. Tapping one opens it in the chat. */
 export function SupportCard() {
@@ -12,6 +13,7 @@ export function SupportCard() {
   const { ask, busy } = useChat()
   const [items, setItems] = useState<SupportOption[]>([])
   const [all, setAll] = useState(false)
+  const [applying, setApplying] = useState<SupportOption | null>(null)
   useEffect(() => {
     if (!user) return
     let live = true
@@ -34,14 +36,15 @@ export function SupportCard() {
               <div className="small muted clamp">{o.what}</div>
             </div>
             <div className="row" style={{ gap: 6, flexShrink: 0 }}>
-              {o.link && <a className="icon-btn" href={o.link} target="_blank" rel="noreferrer noopener" aria-label={`Open ${o.name} on the official site`}><ExternalLink size={16} /></a>}
-              <button className="chip" disabled={busy} onClick={() => void ask(`Tell me about: ${o.name}`)}>Ask {`Lydia`}</button>
+              <button className="chip" disabled={busy} onClick={() => void ask(`Tell me about: ${o.name}`)}>Ask</button>
+              <button className="btn apply-btn" onClick={() => setApplying(o)} aria-label={`Apply: ${o.name}`}><Send size={14} /> Apply</button>
             </div>
           </div>
         ))}
       </div>
       {items.length > 3 && <button className="card-link" onClick={() => setAll(!all)}>{all ? 'Show less' : `Show all ${items.length}`}</button>}
       <p className="tiny muted" style={{ marginBottom: 0 }}>These are signposts, not decisions. The organisation decides who qualifies.</p>
+      {applying && <ApplySheet option={applying} onClose={() => setApplying(null)} />}
     </div>
   )
 }

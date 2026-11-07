@@ -34,7 +34,7 @@ export default function Home({ d }: { d: Dashboard }) {
         <div className="page">
           <div className="hero-top">
             <span className="row" style={{ gap: 8, fontWeight: 600 }}>
-              <img src="/favicon.svg" alt="" width={30} height={30} style={{ borderRadius: 8, outline: '1px solid rgba(255,255,255,.3)' }} />
+              <img src="/natwest.svg" alt="NatWest" width={32} height={32} />
               Finance Buddy
             </span>
             <button className="icon-btn" aria-label="Profile and data" onClick={() => navigate('/profile')}><CircleUserRound size={26} /></button>
@@ -72,7 +72,7 @@ export default function Home({ d }: { d: Dashboard }) {
                   <MoreHorizontal size={18} className="muted" />
                 </div>
                 <div className="row between" style={{ alignItems: 'flex-end' }}>
-                  <span className="bank-dot" style={{ background: 'var(--primary)' }}>FB</span>
+                  <img src="/natwest.svg" alt="" width={26} height={26} />
                   <div className="amount num">{money(o.balance)}</div>
                 </div>
                 <div className="row between small">

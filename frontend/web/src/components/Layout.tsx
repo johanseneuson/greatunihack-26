@@ -14,7 +14,7 @@ export const NAV = [
 ]
 
 export function Logo({ size = 34 }: { size?: number }) {
-  return <img src="/favicon.svg" alt="" className="brand-mark" style={{ width: size, height: size }} />
+  return <img src="/natwest.svg" alt="NatWest" className="brand-mark" style={{ width: size, height: size }} />
 }
 
 export function Layout() {

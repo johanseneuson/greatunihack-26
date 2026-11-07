@@ -32,3 +32,6 @@ Teammates on the same network can open `http://<your-ip>:3000`. Everyone shares 
 The "Common track library" (AI, FinTech, Health, Climate, Security, EdTech, Games, Civic, Hardware) comes with hand-picked links — edit `lib/presets.js` to add more (delete `data/` to reseed). Add a new source by adding an entry to `lib/sources.js`.
 
 Without `GITHUB_TOKEN`, GitHub search allows only 10 requests/min, so bulk fetching many tracks will hit the limit. Results are cached for 1 hour.
+
+---
+Connection test: branch and commit made by Claude Code.

@@ -44,7 +44,7 @@ def _strip_thinking(text: str) -> str:
     return (tail[:1].upper() + tail[1:]) if len(tail.split()) >= 3 else text
 
 
-LEAK = re.compile(r"\b(the user|per the rules|rules say|in context|streaming means|series[_ ]id|out-[0-9a-f]{6})", re.I)
+LEAK = re.compile(r"\b(the user|per the rules|rules say|in context|streaming means|series[_ ]id|out-[0-9a-f]{6}|music service|not a video|video one|non-essential|active, )", re.I)
 
 VOICE_STYLE = """
 
@@ -131,7 +131,9 @@ def chat(ctx: UserContext, db: Session, messages: list[dict], language: str = "E
         proposed, notes = act.propose(tool_uses, ctx, db)
         text = INTRO.sub("", _strip_thinking(_text(r)))
         text = text[:1].upper() + text[1:] if text else text
-        if proposed and (len(text.split()) > 40 or LEAK.search(text)):  # the small model sometimes thinks out loud next to a tool call
+        if notes and not proposed:  # e.g. already paused: say only that, do not also offer it
+            text = ""
+        if proposed and (len(text.split()) > 18 or LEAK.search(text)):  # the small model sometimes thinks out loud next to a tool call
             text = f"I can do that: {proposed[0]['label']}. Want me to go ahead?"
         reply = "\n\n".join(x for x in [text, *notes] if x) or ("I can do that for you. Please confirm below." if proposed else "")
         return {"reply": reply, "sources": sources, "mode": "llm", "grounded": True, "actions": proposed,

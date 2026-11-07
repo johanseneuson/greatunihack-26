@@ -43,6 +43,15 @@ def run_action(body: ActionRequest, ctx: UserContext = Depends(get_ctx), db: Ses
     return {"ok": ok, "message": message}
 
 
+@router.post("/reset-subscriptions", summary="Switch every paused subscription back on (so a demo can be run again)")
+def reset_subscriptions(user_id: int, db: Session = Depends(get_db), ctx: UserContext = Depends(get_ctx)):
+    from sqlalchemy import delete
+    from ..models import PausedSeries
+    n = db.execute(delete(PausedSeries).where(PausedSeries.user_id == ctx.user.id)).rowcount
+    db.commit()
+    return {"ok": True, "switched_back_on": n}
+
+
 @router.get("/support", summary="Real UK schemes this person may be eligible for, matched to their data (signposts, not decisions)")
 def support(ctx: UserContext = Depends(get_ctx)):
     from ..services.chat.support import support_options

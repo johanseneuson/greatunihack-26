@@ -29,6 +29,8 @@ interface Ctx {
   /** Run an action the assistant proposed (after the user confirmed). The server re-validates it. */
   runAction: (a: ProposedAction) => Promise<{ ok: boolean; message: string }>
   decline: (a: ProposedAction) => void
+  /** Switch every paused subscription back on, so they can be cancelled (with Lydia) again. */
+  resetSubscriptions: () => Promise<number>
   reset: () => void
 }
 
@@ -90,13 +92,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [uid, push, refresh])
 
+  const resetSubscriptions = useCallback(async () => {
+    if (!uid) return 0
+    const r = await api.resetSubscriptions(uid)
+    // the model reads the conversation, so tell it (quietly) that earlier cancellations no longer stand
+    push({ role: 'user', hidden: true, text: '[All my subscriptions were switched back on. Anything paused earlier is active again.]' })
+    push({ role: 'assistant', text: r.switched_back_on ? `Done, ${r.switched_back_on} ${r.switched_back_on === 1 ? 'subscription is' : 'subscriptions are'} back on.` : 'Everything was already on.' })
+    await refresh()
+    return r.switched_back_on
+  }, [uid, push, refresh])
+
   const decline: Ctx['decline'] = useCallback((a) => {
     dropAction(a)
     push({ role: 'user', hidden: true, text: `[I declined: ${a.label}]` })
   }, [push])
 
-  const value = useMemo(() => ({ messages, busy, language, setLanguage, plain, setPlain, ask, runAction, decline, reset }),
-    [messages, busy, language, plain, ask, runAction, decline, reset])
+  const value = useMemo(() => ({ messages, busy, language, setLanguage, plain, setPlain, ask, runAction, decline, resetSubscriptions, reset }),
+    [messages, busy, language, plain, ask, runAction, decline, resetSubscriptions, reset])
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>
 }
 

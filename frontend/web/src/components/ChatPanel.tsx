@@ -1,4 +1,4 @@
-import { Phone, Send, Sparkles } from 'lucide-react'
+import { Phone, RotateCcw, Send, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { LANGUAGES, useChat, type Msg } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
@@ -58,7 +58,7 @@ function Bubble({ m }: { m: Msg }) {
 
 export function ChatPanel({ tall = false }: { tall?: boolean }) {
   const { user } = useUser()
-  const { messages, busy, ask, language, setLanguage, plain, setPlain } = useChat()
+  const { messages, busy, ask, language, setLanguage, plain, setPlain, resetSubscriptions } = useChat()
   const [text, setText] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
   const visible = messages.filter((m) => !m.hidden)
@@ -76,9 +76,12 @@ export function ChatPanel({ tall = false }: { tall?: boolean }) {
           <button className="btn secondary" onClick={() => window.dispatchEvent(new Event('fb:call'))} aria-label={`Call ${BOT_NAME} and talk`}><Phone size={16} /> Call</button>
         </div>
       </div>
-      <label className="row small muted" style={{ marginTop: 8 }}>
+      <div className="row wrap" style={{ marginTop: 8, justifyContent: 'space-between' }}>
+      <label className="row small muted">
         <input type="checkbox" checked={plain} onChange={(e) => setPlain(e.target.checked)} /> Extra simple language
       </label>
+      <button className="chip" onClick={() => void resetSubscriptions()} disabled={busy} title="Switch every paused subscription back on"><RotateCcw size={12} style={{ verticalAlign: -1 }} /> Reset subscriptions</button>
+      </div>
 
       <div className="chat-log" ref={logRef} role="log" aria-live="polite">
         <div className="msg bot">{language === 'English'

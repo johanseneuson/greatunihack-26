@@ -138,6 +138,15 @@ def build_docs(ctx: UserContext, db: Session) -> list[dict]:
         "\n".join(f"{m['month']}: income {gbp(m['income'])}, spending {gbp(m['spending'])}, net {gbp(m['net'])}{' (month not finished)' if m.get('partial') else ''}"
                   for m in monthly_cashflow(ctx, 6)))
 
+    # "What was my last purchase?" needs the newest transactions in front of the assistant every time, not whatever search finds.
+    newest = ctx.flows.sort_values(["date", "id"], ascending=False).head(15)
+    add("transactions", "Latest transactions (newest first)",
+        "Newest first. A purchase is spending on food, shopping, eating out or travel; bills and money in are listed too.\n"
+        + "\n".join(f"{day(r.date)} {r.description[:40]} {gbp(r.amount)} ({r.category})" for r in newest.itertuples()), core=True)
+    month_out = ctx.flows[(ctx.flows["date"] > ctx.as_of - pd.Timedelta(days=30)) & (ctx.flows["amount"] < 0)].nsmallest(6, "amount")
+    add("transactions", "Biggest payments in the last 30 days",
+        "\n".join(f"{day(r.date)} {r.description[:40]} {gbp(r.amount)} ({r.category})" for r in month_out.itertuples()) or "None.", core=True)
+
     recent = ctx.flows[ctx.flows["date"] > ctx.as_of - pd.Timedelta(days=90)]
     for (month, cat), g in recent.groupby([recent["date"].dt.strftime("%Y-%m"), "category"]):
         lines = "; ".join(f"{r.date.date().isoformat()} {r.description[:30]} {gbp(r.amount)}" for r in g.sort_values("date").tail(25).itertuples())

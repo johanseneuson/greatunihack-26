@@ -200,3 +200,22 @@ def test_reset_subscriptions_switches_everything_back_on(client, user_with_data)
     assert client.post(f"/api/users/{uid}/actions", json={"action": {"type": "pause_subscription", "series_id": after["Netflix"]["series_id"]}}).json()["ok"]
     assert client.post(f"/api/users/{uid}/reset-subscriptions").json()["switched_back_on"] == 1
     assert client.post(f"/api/users/{uid}/reset-subscriptions").json()["switched_back_on"] == 0  # nothing left to reset
+
+
+def test_latest_transactions_are_always_in_front_of_the_assistant(client, user_with_data):
+    from app.db import SessionLocal
+    from app.models import User
+    from app.services.analytics.context import build_context
+    from app.services.chat.corpus import build_docs
+    db = SessionLocal()
+    try:
+        ctx = build_context(db, db.get(User, user_with_data["id"]))
+        docs = build_docs(ctx, db)
+    finally:
+        db.close()
+    latest = next(d for d in docs if d["title"] == "Latest transactions (newest first)")
+    assert latest["core"]  # always included, so "what was my last purchase?" never depends on search
+    newest = ctx.flows.sort_values(["date", "id"], ascending=False).iloc[0]
+    first_line = latest["text"].split("\n")[1]
+    assert newest["description"][:20] in first_line and f"{abs(newest['amount']):,.2f}" in first_line
+    assert any(d["title"] == "Biggest payments in the last 30 days" for d in docs)

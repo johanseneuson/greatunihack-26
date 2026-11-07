@@ -13,10 +13,19 @@ Rules:
 
 const contextBlock = hits => hits.map((h, i) => `[${i + 1}] (${h.kind}) ${h.title}\n${h.text}`).join('\n\n');
 
+// Retrieval is keyword-based over English text, so non-English questions are first turned into English search keywords.
+async function toEnglishQuery(q) {
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY || "", "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5", max_tokens: 60, thinking: { type: "disabled" }, messages: [{ role: "user", content: "Translate to English as short search keywords about personal finance. Output only the keywords. Text: " + q.slice(0, 500) }] }) });
+    const j = await r.json();
+    return (j.content || []).map(c => c.text || "").join(" ") + " " + q;
+  } catch { return q; }
+}
+
 async function chat({ messages, language = 'English', plain = false }) {
   const last = [...messages].reverse().find(m => m.role === 'user')?.content || '';
   const recentUser = messages.filter(m => m.role === 'user').slice(-2).map(m => m.content).join(' ');
-  const hits = search(recentUser, 5);
+  const hits = search(language === "English" ? recentUser : await toEnglishQuery(recentUser), 5);
   const sources = hits.map((h, i) => ({ n: i + 1, kind: h.kind, title: h.title }));
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return { reply: offline(hits), sources, mode: 'offline' };
@@ -27,7 +36,7 @@ async function chat({ messages, language = 'English', plain = false }) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5', max_tokens: 700, system: sys, messages: msgs })
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5', max_tokens: 900, thinking: { type: 'disabled' }, system: sys, messages: msgs })
     });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error?.message || r.status);

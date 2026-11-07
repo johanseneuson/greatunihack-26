@@ -1,16 +1,17 @@
 const $ = s => document.querySelector(s);
 const gbp = n => (n < 0 ? '-£' : '£') + Math.abs(n).toFixed(2);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const history = [];
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { } } };
 const RTL = ['العربية', 'Urdu (اردو)'];
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
 // ---- settings / accessibility ----
 const root = document.documentElement;
 function applySettings() {
   root.classList.toggle('big', $('#big').checked);
   root.classList.toggle('contrast', $('#contrast').checked);
-  const lang = $('#lang').value;
-  document.body.dir = RTL.includes(lang) ? 'rtl' : 'ltr';
+  document.body.dir = RTL.includes($('#lang').value) ? 'rtl' : 'ltr';
   ['lang', 'plain', 'big', 'contrast'].forEach(k => store.set('fb_' + k, k === 'lang' ? $('#lang').value : $('#' + k).checked));
 }
 ['lang', 'plain', 'big', 'contrast'].forEach(k => {
@@ -43,12 +44,13 @@ function sourcesEl(sources, mode) {
 }
 async function ask(q) {
   q = q.trim(); if (!q) return;
+  showTab('coach');
   bubble('me', q); history.push({ role: 'user', content: q });
   $('#msg').value = ''; $('#send').disabled = true;
   const t = document.createElement('div'); t.className = 'msg bot typing'; t.setAttribute('aria-label', 'Finance Buddy is typing'); t.innerHTML = '<i></i><i></i><i></i>';
   $('#log').append(t); t.scrollIntoView({ block: 'end' });
   try {
-    const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: history, language: $('#lang').value, plain: $('#plain').checked }) });
+    const r = await post('/api/chat', { messages: history, language: $('#lang').value, plain: $('#plain').checked });
     if (!r.ok) throw new Error(r.status);
     const j = await r.json();
     history.push({ role: 'assistant', content: j.reply });
@@ -76,24 +78,86 @@ if (SR) {
 }
 
 // ---- home data ----
-async function init() {
+async function loadHome() {
   try {
     const { snapshot: s, insights } = await (await fetch('/api/insights')).json();
     $('#bal').textContent = gbp(s.balance); $('#sav').textContent = gbp(s.savingsPot);
     $('#od').textContent = s.balance < 0 ? `In overdraft (limit ${gbp(s.overdraftLimit)})` : `Overdraft limit ${gbp(s.overdraftLimit)}`;
-    const cards = $('#cards');
+    const cards = $('#cards'); cards.innerHTML = '';
     insights.forEach(i => {
       const c = document.createElement('div'); c.className = 'card ' + i.level;
       const h = document.createElement('h3'); h.textContent = i.title;
       const p = document.createElement('p'); p.textContent = i.body;
-      const b = document.createElement('button'); b.textContent = 'Help me with this'; b.onclick = () => { ask(i.ask); $('#chat').scrollIntoView({ behavior: 'smooth' }); };
+      const b = document.createElement('button'); b.textContent = 'Help me with this';
+      b.onclick = () => { ask(i.ask); $('#chat').scrollIntoView({ behavior: 'smooth' }); };
       c.append(h, p, b); cards.append(c);
     });
   } catch { $('#cards').textContent = 'Could not load your insights.'; }
-  const hello = 'Hi Maya, I am your Finance Buddy. I can see your account and your bills, so I can give advice that fits your life. What would you like help with?';
-  bubble('bot', hello);
+}
+function firstRun() {
+  bubble('bot', 'Hi Maya, I am your Finance Buddy. I can see your account, your bills and what is coming up, so I can give advice that fits your life. What would you like help with?');
   ['Can I afford £30 this week?', 'Where does my money go?', 'Help me save £500', 'What help can I get?'].forEach(q => {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); $('#chips').append(b);
   });
 }
-init();
+
+// ---- tabs ----
+function showTab(name) {
+  const coach = name === 'coach';
+  $('#coach').hidden = !coach; $('#money').hidden = coach; $('#form').hidden = !coach;
+  $('#t-coach').setAttribute('aria-selected', String(coach)); $('#t-money').setAttribute('aria-selected', String(!coach));
+  if (!coach) loadMoney();
+}
+$('#t-coach').onclick = () => showTab('coach');
+$('#t-money').onclick = () => showTab('money');
+
+// ---- expenses & subscriptions (past and future; the coach reads the same database) ----
+let view = 'upcoming', moneyData = null;
+const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  view = b.dataset.v;
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  renderMoney();
+});
+async function loadMoney() { moneyData = await (await fetch('/api/expenses')).json(); renderMoney(); }
+function itemHtml(name, detail, amt, extra = '', off = false) {
+  return `<div class="item${off ? ' off' : ''}"><span class="n">${esc(name)}</span><span class="a${amt > 0 ? ' pos' : ''}">${gbp(amt)}</span><span class="d">${esc(detail)}</span>${extra}</div>`;
+}
+function renderMoney() {
+  if (!moneyData) return;
+  let h = '';
+  $('#addForm').hidden = view !== 'upcoming';
+  if (view === 'upcoming') {
+    const tot = moneyData.upcoming.filter(u => u.inDays <= 30).reduce((a, u) => a + u.amount, 0);
+    h += `<div class="sum">Next 30 days: ${gbp(-tot)} going out</div>`;
+    moneyData.upcoming.forEach(u => {
+      const del = u.kind === 'planned' ? `<div class="act"><button data-del="${u.id}" aria-label="Remove ${esc(u.name)}">Remove</button></div>` : '';
+      h += itemHtml(u.name, `${fmtDate(u.date)} · in ${u.inDays} days · ${u.kind}${u.essential ? ' · essential' : ''}`, u.amount, del);
+    });
+  } else if (view === 'subs') {
+    const act = moneyData.subscriptions.filter(r => r.active), mo = act.reduce((a, r) => a + r.amount, 0);
+    h += `<div class="sum">Active: ${gbp(-mo)} a month (${gbp(-mo * 12)} a year)</div>`;
+    moneyData.subscriptions.forEach(r => {
+      const btn = r.essential ? '' : `<div class="act"><button data-sub="${r.id}" data-active="${r.active ? 0 : 1}">${r.active ? 'Pause / cancel' : 'Switch back on'}</button></div>`;
+      h += itemHtml(r.merchant, `Day ${r.day_of_month} monthly · ${r.type}${r.essential ? ' · essential' : ''}${r.note ? ' · ' + r.note : ''}${r.active ? '' : ' · PAUSED'}`, r.amount, btn, !r.active);
+    });
+  } else {
+    let last = '';
+    moneyData.past.forEach(t => {
+      const m = new Date(t.date + 'T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      if (m !== last) { h += `<div class="mh">${m}</div>`; last = m; }
+      h += itemHtml(t.merchant, `${fmtDate(t.date)} · ${t.category}`, t.amount);
+    });
+  }
+  const l = $('#mlist'); l.innerHTML = h;
+  l.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { await fetch('/api/planned/' + b.dataset.del, { method: 'DELETE' }); loadMoney(); loadHome(); });
+  l.querySelectorAll('[data-sub]').forEach(b => b.onclick = async () => { await post(`/api/recurring/${b.dataset.sub}/active`, { active: b.dataset.active === '1' }); loadMoney(); loadHome(); });
+}
+$('#addForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const r = await post('/api/planned', { description: $('#aDesc').value, amount: $('#aAmt').value, date: $('#aDate').value, essential: $('#aEss').checked });
+  if (r.ok) { e.target.reset(); $('#aErr').textContent = ''; loadMoney(); loadHome(); }
+  else $('#aErr').textContent = 'Please check the details and try again.';
+});
+
+loadHome(); firstRun();

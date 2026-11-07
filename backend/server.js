@@ -5,7 +5,7 @@ try {
     if (m && m[2] && !process.env[m[1]]) process.env[m[1]] = m[2];
   });
 } catch { /* no .env: offline mode */ }
-const F = require('./finance'), { chat } = require('./llm');
+const F = require('./finance'), D = require('./db'), { chat } = require('./llm');
 const WEB = path.join(__dirname, '..', 'frontend');
 const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
 const send = (res, code, body, type = 'application/json') => {
@@ -13,16 +13,32 @@ const send = (res, code, body, type = 'application/json') => {
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 };
 
+async function readJson(req) {
+  let body = '';
+  for await (const c of req) { body += c; if (body.length > 20000) throw new Error('too large'); }
+  return JSON.parse(body || '{}');
+}
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
     if (url.pathname === '/api/profile') return send(res, 200, F.profile);
     if (url.pathname === '/api/insights') return send(res, 200, F.insights());
-    if (url.pathname === '/api/transactions') return send(res, 200, F.tx.slice(-(+url.searchParams.get('limit') || 30)).reverse());
+    if (url.pathname === '/api/transactions') return send(res, 200, F.transactions(Math.min(+url.searchParams.get('limit') || 50, 500)));
+    if (url.pathname === '/api/expenses') return send(res, 200, { subscriptions: F.subscriptions(), upcoming: F.schedule(60), planned: F.planned(), past: F.transactions(60) });
+    if (url.pathname === '/api/planned' && req.method === 'POST') {
+      const b = await readJson(req), amt = -Math.abs(+b.amount), date = String(b.date || '');
+      if (!b.description || !(amt < 0) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return send(res, 400, { error: 'description, amount and date (YYYY-MM-DD) required' });
+      D.run('INSERT INTO planned_expenses (date,description,category,amount,essential) VALUES (?,?,?,?,?)', date, String(b.description).slice(0, 80), 'other', amt, b.essential ? 1 : 0);
+      return send(res, 200, { ok: true });
+    }
+    let m;
+    if ((m = url.pathname.match(/^\/api\/planned\/(\d+)$/)) && req.method === 'DELETE') { D.run('DELETE FROM planned_expenses WHERE id=?', +m[1]); return send(res, 200, { ok: true }); }
+    if ((m = url.pathname.match(/^\/api\/recurring\/(\d+)\/active$/)) && req.method === 'POST') {
+      const b = await readJson(req); D.run('UPDATE recurring SET active=? WHERE id=?', b.active ? 1 : 0, +m[1]); return send(res, 200, { ok: true });
+    }
     if (url.pathname === '/api/chat' && req.method === 'POST') {
-      let body = '';
-      for await (const c of req) { body += c; if (body.length > 20000) return send(res, 413, { error: 'too large' }); }
-      const { messages, language, plain } = JSON.parse(body || '{}');
+      const { messages, language, plain } = await readJson(req);
       if (!Array.isArray(messages) || !messages.length) return send(res, 400, { error: 'messages required' });
       return send(res, 200, await chat({ messages, language, plain }));
     }

@@ -1,0 +1,20 @@
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:64px;z-index:4}
+.tabs button{flex:1;min-height:48px;border:0;background:none;font-weight:600;color:var(--mute);border-bottom:4px solid transparent;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--brand);border-bottom-color:var(--brand)}
+.money{padding:12px 16px 40px}.money[hidden],main[hidden],.composer[hidden]{display:none}
+.seg{display:flex;gap:6px;margin-bottom:12px}
+.seg button{flex:1;min-height:44px;border-radius:99px;border:1px solid var(--brand);background:#fff;color:var(--brand);font-weight:600;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--brand);color:#fff}
+.mlist{display:flex;flex-direction:column;gap:8px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.item .n{font-weight:600}.item .d{font-size:.82rem;color:var(--mute);grid-column:1/-1}.item .a{font-weight:700;text-align:right;grid-column:2;grid-row:1}.item .a.pos{color:var(--tip)}
+.item.off{opacity:.55}.item .act{grid-column:1/-1;display:flex;gap:8px;margin-top:6px}
+.item .act button{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--brand);background:#fff;color:var(--brand);cursor:pointer}
+.mh{margin:12px 0 2px;font-size:.85rem;color:var(--mute);font-weight:700}
+.sum{background:var(--goalbg);border-radius:12px;padding:10px 12px;font-weight:600}
+.add{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px}
+.add[hidden]{display:none}.add h3{margin:0;font-size:1rem}
+.add label{display:grid;gap:4px;font-size:.9rem}.add label.row{display:flex}
+.add input:not([type=checkbox]){min-height:48px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff}
+.primary{min-height:48px;border:0;border-radius:99px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+.pad{margin-top:16px}.err{color:var(--warn);font-weight:600;margin:0}

@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#42145f">
 <title>Finance Buddy</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="money.css">
 </head>
 <body>
 <a class="skip" href="#chat">Skip to chat</a>
@@ -28,7 +29,12 @@
     <p class="fine">Finance Buddy gives guidance, not regulated financial advice. Demo data for a fictional user.</p>
   </section>
 
-  <main>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-coach" aria-selected="true" aria-controls="coach">Coach</button>
+    <button role="tab" id="t-money" aria-selected="false" aria-controls="money">Expenses</button>
+  </nav>
+
+  <main id="coach" role="tabpanel" aria-labelledby="t-coach">
     <section class="balance" aria-label="Your account">
       <div><span class="label">In your account</span><strong id="bal">…</strong><span id="od" class="chip"></span></div>
       <div class="mini"><span>Saved</span><strong id="sav">…</strong></div>
@@ -45,6 +51,25 @@
       <div id="chips" class="quick"></div>
     </section>
   </main>
+
+  <section id="money" class="money" role="tabpanel" aria-labelledby="t-money" hidden>
+    <div class="seg" role="group" aria-label="Show">
+      <button data-v="upcoming" aria-pressed="true">Coming up</button>
+      <button data-v="subs" aria-pressed="false">Subscriptions</button>
+      <button data-v="past" aria-pressed="false">Past</button>
+    </div>
+    <div id="mlist" class="mlist"></div>
+    <form id="addForm" class="add">
+      <h3>Add a planned expense</h3>
+      <label>What for<input id="aDesc" required maxlength="80" placeholder="e.g. Concert ticket"></label>
+      <label>Amount (£)<input id="aAmt" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+      <label>Date<input id="aDate" type="date" required></label>
+      <label class="row"><input type="checkbox" id="aEss"> It is essential</label>
+      <p id="aErr" class="err" role="alert"></p>
+      <button class="primary">Save</button>
+    </form>
+    <p class="fine pad">The coach can see everything on this page, so keep it up to date.</p>
+  </section>
 
   <form id="form" class="composer" autocomplete="off">
     <label for="msg" class="sr">Type your question</label>

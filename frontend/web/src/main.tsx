@@ -8,7 +8,7 @@ import './styles/app.css'
 // Apply saved theme before first paint
 try {
   const t = localStorage.getItem('fb.theme')
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t)
+  if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
 } catch { /* storage unavailable */ }
 
 createRoot(document.getElementById('root')!).render(

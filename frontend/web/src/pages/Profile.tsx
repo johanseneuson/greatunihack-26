@@ -12,17 +12,17 @@ const CHALLENGES = [
   ['home_renovation', 'Doing up my home'], ['student', 'Studying'],
 ] as const
 
-type Theme = 'system' | 'light' | 'dark'
+type Theme = 'light' | 'dark'
 const applyTheme = (t: Theme) => {
-  if (t === 'system') document.documentElement.removeAttribute('data-theme')
-  else document.documentElement.setAttribute('data-theme', t)
+  if (t === 'light') document.documentElement.removeAttribute('data-theme')
+  else document.documentElement.setAttribute('data-theme', 'dark')
   try { localStorage.setItem('fb.theme', t) } catch { /* ignore */ }
 }
 
 export default function Profile() {
   const { users, user, setUserId, refresh, reloadUsers } = useUser()
   const [sheet, setSheet] = useState<null | 'upload' | 'bank' | 'new'>(null)
-  const [theme, setTheme] = useState<Theme>(() => { try { return (localStorage.getItem('fb.theme') as Theme) || 'system' } catch { return 'system' } })
+  const [theme, setTheme] = useState<Theme>(() => { try { return localStorage.getItem('fb.theme') === 'dark' ? 'dark' : 'light' } catch { return 'light' } })
 
   return (
     <div className="page">
@@ -75,9 +75,9 @@ export default function Profile() {
           <Card>
             <h3>Appearance</h3>
             <div className="chips" style={{ marginTop: 10 }}>
-              {(['system', 'light', 'dark'] as Theme[]).map((t) => (
+              {(['light', 'dark'] as Theme[]).map((t) => (
                 <button key={t} className={`chip ${theme === t ? 'on' : ''}`} onClick={() => { setTheme(t); applyTheme(t) }}>
-                  {t === 'light' ? <Sun size={14} /> : t === 'dark' ? <Moon size={14} /> : null} {t[0].toUpperCase() + t.slice(1)}
+                  {t === 'light' ? <Sun size={14} /> : <Moon size={14} />} {t[0].toUpperCase() + t.slice(1)}
                 </button>
               ))}
             </div>

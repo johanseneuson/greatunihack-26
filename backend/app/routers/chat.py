@@ -22,6 +22,7 @@ class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1, max_length=40)
     language: str = Field("English", max_length=40)
     plain: bool = False
+    voice: bool = False  # live call: shorter, spoken style
 
 
 class ActionRequest(BaseModel):
@@ -33,7 +34,7 @@ def chat(body: ChatRequest, ctx: UserContext = Depends(get_ctx), db: Session = D
     msgs = [m.model_dump() for m in body.messages]
     if msgs[-1]["role"] != "user":
         msgs.append({"role": "user", "content": "Continue."})
-    return assistant.chat(ctx, db, msgs, body.language, body.plain)
+    return assistant.chat(ctx, db, msgs, body.language, body.plain, body.voice)
 
 
 @router.post("/actions", summary="Run an action the assistant proposed, after the user confirmed it. Re-validated server-side")

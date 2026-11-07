@@ -7,13 +7,17 @@
 <title>Finance Buddy</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="money.css">
+<link rel="stylesheet" href="call.css">
 </head>
 <body>
 <a class="skip" href="#chat">Skip to chat</a>
 <div class="app">
   <header class="top">
     <div class="brand"><span class="logo" aria-hidden="true">£</span><div><h1>Finance Buddy</h1><p class="sub">Your money coach</p></div></div>
-    <button id="settingsBtn" class="icon" aria-label="Settings and accessibility" aria-expanded="false" aria-controls="settings">⚙</button>
+    <div class="actions">
+      <button id="callBtn" class="callbtn" aria-label="Call Finance Buddy and talk">📞 Call</button>
+      <button id="settingsBtn" class="icon" aria-label="Settings and accessibility" aria-expanded="false" aria-controls="settings">⚙</button>
+    </div>
   </header>
 
   <section id="settings" class="settings" hidden aria-label="Settings and accessibility">
@@ -81,6 +85,18 @@
     <button id="send" aria-label="Send">➤</button>
   </form>
 </div>
+
+<div id="call" class="call" data-state="idle" role="dialog" aria-modal="true" aria-label="Call with Finance Buddy" hidden>
+  <div><p class="who">Finance Buddy</p><p id="callStatus" class="callstatus" aria-live="polite"></p></div>
+  <button id="orb" class="orb" aria-label="Finance Buddy. Tap to interrupt while it is speaking"></button>
+  <div class="caps" aria-live="polite"><div id="callYou" class="you"></div><div id="callBot" class="bot"></div></div>
+  <div id="callPending" class="pend" hidden><p id="callPendingText"></p><div><button id="callYes">Yes, do it</button><button id="callNo">No thanks</button></div></div>
+  <div>
+    <label class="tog"><input type="checkbox" id="talkOver" checked> Let me talk over it</label>
+    <div class="ctl"><button id="callMute" aria-pressed="false" aria-label="Mute microphone">🎤</button><button id="callEnd" aria-label="End call">✕</button></div>
+  </div>
+</div>
 <script src="app.js"></script>
+<script src="call.js"></script>
 </body>
 </html>

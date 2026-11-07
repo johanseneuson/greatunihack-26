@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi.staticfiles import StaticFiles
 
-from .routers import chat, data, insights, users
+from .routers import chat, data, insights, users, voice
 from .seed import seed_safely
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
@@ -45,7 +45,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (users.router, data.router, insights.router, chat.router):
+for r in (users.router, data.router, insights.router, chat.router, voice.router):
     app.include_router(r, prefix="/api")
 
 

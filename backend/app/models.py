@@ -77,3 +77,28 @@ class Goal(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="goals")
+
+
+class PlannedExpense(Base):
+    """A known future one-off cost the user (or the chat assistant, after confirmation) added. Feeds the forecast."""
+    __tablename__ = "planned_expenses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    description: Mapped[str] = mapped_column(String(80))
+    amount: Mapped[float] = mapped_column(Float)  # signed: negative = cost
+    essential: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PausedSeries(Base):
+    """A detected recurring payment the user chose to pause/cancel. The forecast treats it as cancelled."""
+    __tablename__ = "paused_series"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    series_id: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    __table_args__ = (UniqueConstraint("user_id", "series_id"),)

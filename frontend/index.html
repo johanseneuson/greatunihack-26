@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#42145f">
+<title>Finance Buddy</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="money.css">
+</head>
+<body>
+<a class="skip" href="#chat">Skip to chat</a>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true">£</span><div><h1>Finance Buddy</h1><p class="sub">Your money coach</p></div></div>
+    <button id="settingsBtn" class="icon" aria-label="Settings and accessibility" aria-expanded="false" aria-controls="settings">⚙</button>
+  </header>
+
+  <section id="settings" class="settings" hidden aria-label="Settings and accessibility">
+    <label>Language
+      <select id="lang">
+        <option>English</option><option>Español</option><option>Polski</option><option>Português</option>
+        <option>Français</option><option>العربية</option><option>Română</option><option>Bengali (বাংলা)</option><option>Urdu (اردو)</option>
+      </select>
+    </label>
+    <label>Demo person
+      <select id="who"><option value="2">Jordan Lee: first job, stretched</option><option value="1">Alex Morgan: homeowner, thriving</option></select>
+    </label>
+    <label class="row"><input type="checkbox" id="plain"> Extra simple language</label>
+    <label class="row"><input type="checkbox" id="big"> Larger text</label>
+    <label class="row"><input type="checkbox" id="contrast"> High contrast</label>
+    <p class="fine">Finance Buddy gives guidance, not regulated financial advice. Demo data for a fictional user.</p>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-coach" aria-selected="true" aria-controls="coach">Coach</button>
+    <button role="tab" id="t-money" aria-selected="false" aria-controls="money">Expenses</button>
+  </nav>
+
+  <main id="coach" role="tabpanel" aria-labelledby="t-coach">
+    <section class="balance" aria-label="Your account">
+      <div><span class="label">In your account</span><strong id="bal">…</strong><span id="od" class="chip"></span></div>
+      <div class="mini"><span>Safe to spend today</span><strong id="sav">…</strong></div>
+    </section>
+
+    <section aria-label="Things to know" class="cards-wrap">
+      <h2>For you today</h2>
+      <div id="cards" class="cards" tabindex="0"></div>
+    </section>
+
+    <section id="chat" class="chat" aria-label="Chat with Finance Buddy">
+      <h2>Ask me anything about your money</h2>
+      <div id="log" class="log" role="log" aria-live="polite"></div>
+      <div id="chips" class="quick"></div>
+    </section>
+  </main>
+
+  <section id="money" class="money" role="tabpanel" aria-labelledby="t-money" hidden>
+    <div class="seg" role="group" aria-label="Show">
+      <button data-v="upcoming" aria-pressed="true">Coming up</button>
+      <button data-v="subs" aria-pressed="false">Subscriptions</button>
+      <button data-v="past" aria-pressed="false">Past</button>
+    </div>
+    <div id="mlist" class="mlist"></div>
+    <form id="addForm" class="add">
+      <h3>Add a planned expense</h3>
+      <label>What for<input id="aDesc" required maxlength="80" placeholder="e.g. Concert ticket"></label>
+      <label>Amount (£)<input id="aAmt" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+      <label>Date<input id="aDate" type="date" required></label>
+      <label class="row"><input type="checkbox" id="aEss"> It is essential</label>
+      <p id="aErr" class="err" role="alert"></p>
+      <button class="primary">Save</button>
+    </form>
+    <p class="fine pad">The coach can see everything on this page, so keep it up to date.</p>
+  </section>
+
+  <form id="form" class="composer" autocomplete="off">
+    <label for="msg" class="sr">Type your question</label>
+    <input id="msg" placeholder="Ask about your money…" enterkeyhint="send">
+    <button type="button" id="mic" class="icon" aria-label="Speak your question" hidden>🎤</button>
+    <button id="send" aria-label="Send">➤</button>
+  </form>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

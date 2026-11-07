@@ -113,3 +113,32 @@ class ScenarioRequest(BaseModel):
 
 class CoachRequest(BaseModel):
     question: str | None = Field(None, max_length=500)
+
+
+DebtKind = Literal["credit_card", "bnpl", "loan", "overdraft", "other"]
+
+
+class DebtCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    kind: DebtKind = "credit_card"
+    balance: float = Field(gt=0)
+    apr: float = Field(0, ge=0, le=100, description="Interest rate, % per year")
+    min_payment: float = Field(gt=0, description="Minimum monthly payment")
+    series_id: str | None = Field(None, description="Recurring payment that already pays this debt, if any")
+
+
+class DebtUpdate(BaseModel):
+    name: str | None = None
+    kind: DebtKind | None = None
+    balance: float | None = Field(None, ge=0)
+    apr: float | None = Field(None, ge=0, le=100)
+    min_payment: float | None = Field(None, gt=0)
+
+
+class DebtOut(DebtCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class FutureSelfRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=400)

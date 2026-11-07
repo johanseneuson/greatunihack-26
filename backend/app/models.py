@@ -103,3 +103,19 @@ class PausedSeries(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     __table_args__ = (UniqueConstraint("user_id", "series_id"),)
+
+
+class Debt(Base):
+    """A debt the user is paying off (credit card, buy-now-pay-later, loan). Drives the debt-free countdown."""
+    __tablename__ = "debts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    kind: Mapped[str] = mapped_column(String(20), default="credit_card")  # credit_card | bnpl | loan | overdraft | other
+    balance: Mapped[float] = mapped_column(Float)
+    apr: Mapped[float] = mapped_column(Float, default=0.0)  # % per year
+    min_payment: Mapped[float] = mapped_column(Float)  # per month
+    # Recurring payment in the transactions that already pays this debt (so the forecast isn't double-counted)
+    series_id: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

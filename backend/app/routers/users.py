@@ -3,8 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Goal, User
-from ..schemas import GoalCreate, GoalOut, UserCreate, UserOut, UserUpdate
+from ..models import Debt, Goal, User
+from ..schemas import DebtCreate, DebtOut, DebtUpdate, GoalCreate, GoalOut, UserCreate, UserOut, UserUpdate
 from .deps import get_user
 
 router = APIRouter(tags=["users"])
@@ -63,3 +63,37 @@ def delete_goal(goal_id: int, user: User = Depends(get_user), db: Session = Depe
         raise HTTPException(404, "Goal not found")
     db.delete(goal)
     db.commit()
+
+
+@router.get("/users/{user_id}/debts", response_model=list[DebtOut])
+def list_debts(user: User = Depends(get_user), db: Session = Depends(get_db)):
+    return db.scalars(select(Debt).where(Debt.user_id == user.id).order_by(Debt.apr.desc())).all()
+
+
+@router.post("/users/{user_id}/debts", response_model=DebtOut, status_code=201)
+def create_debt(body: DebtCreate, user: User = Depends(get_user), db: Session = Depends(get_db)):
+    debt = Debt(user_id=user.id, **body.model_dump())
+    db.add(debt)
+    db.commit()
+    return debt
+
+
+@router.patch("/users/{user_id}/debts/{debt_id}", response_model=DebtOut)
+def update_debt(debt_id: int, body: DebtUpdate, user: User = Depends(get_user), db: Session = Depends(get_db)):
+    debt = db.get(Debt, debt_id)
+    if not debt or debt.user_id != user.id:
+        raise HTTPException(404, "Debt not found")
+    for k, v in body.model_dump(exclude_unset=True).items():
+        setattr(debt, k, v)
+    db.commit()
+    return debt
+
+
+@router.delete("/users/{user_id}/debts/{debt_id}", status_code=204)
+def delete_debt(debt_id: int, user: User = Depends(get_user), db: Session = Depends(get_db)):
+    debt = db.get(Debt, debt_id)
+    if not debt or debt.user_id != user.id:
+        raise HTTPException(404, "Debt not found")
+    db.delete(debt)
+    db.commit()
+

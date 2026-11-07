@@ -2,6 +2,7 @@ import { CalendarClock, Sparkles, Waves as WavesIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Bar, CartesianGrid, Cell, ComposedChart, ErrorBar, LabelList, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { FutureSelf } from '../components/FutureSelf'
 import { FutureTracker, HORIZONS, horizonData, indexAt } from '../components/FutureTracker'
 import { Card, PageHead } from '../components/ui'
 import { compact, dayMonth, monthLong, monthShort, monthTicks, money0, signed0 } from '../lib/format'
@@ -65,6 +66,7 @@ export default function Future({ d }: { d: Dashboard }) {
     <div className="page">
       <PageHead title="Your future" />
       <FutureTracker d={d} fc={fc} months={months} onMonths={setMonths} hoverDate={hoverDate} onHover={setHoverDate} accuracy={accuracy} />
+      <FutureSelf d={d} />
 
       <Card className="section">
         <div className="row" style={{ alignItems: 'flex-start' }}>

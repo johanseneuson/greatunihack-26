@@ -219,3 +219,43 @@ export interface ImportResult {
   imported: number; duplicates_skipped: number; accounts: string[]; date_from: string | null; date_to: string | null
   detected_columns?: Record<string, string>; notes?: string[]
 }
+
+// ---------- Financial Support & Opportunity Finder ----------
+export interface EligibilityCheck { label: string; status: 'met' | 'unknown' | 'not_met'; detail: string }
+export interface Opportunity {
+  id: string; name: string; category: string; category_label: string
+  why: string; what: string; link: string; link_label: string; check: string
+  checks: EligibilityCheck[]; value: string | null; confidence: 'strong' | 'worth_checking'; priority: number
+  // How to apply (steps, official page, ready-to-send message) - shown in ApplySheet
+  apply_url: string; steps: string[]; draft: string
+}
+export interface Opportunities {
+  summary: { count: number; strong: number; categories: string[]; headline: string; intro: string }
+  options: Opportunity[]
+}
+
+// ---------- Future Self ----------
+export interface Debt { id: number; name: string; kind: 'credit_card' | 'bnpl' | 'loan' | 'overdraft' | 'other'; balance: number; apr: number; min_payment: number; series_id: string | null }
+export interface MilestonePoint {
+  month: string; date: string; balance_current: number; balance_with_plan: number; debt_current: number; debt_with_plan: number
+}
+export interface Milestones {
+  extra: number; horizon_months: number
+  debt: null | {
+    total: number; min_payments: number; months_current: number | null; months_with_plan: number | null
+    date_current: string | null; date_with_plan: string | null; interest_current: number | null; interest_with_plan: number | null
+    interest_saved: number | null; months_saved: number | null; never_current: boolean; never_with_plan: boolean
+    items: { id: number; name: string; kind: string; balance: number; apr: number; min_payment: number; months_current: number | null; months_with_plan: number | null }[]
+  }
+  emergency: { target: number; label: string; current: number; progress: number; months_current: number | null; months_with_plan: number | null; date_current: string | null; date_with_plan: string | null }
+  payday: null | { date: string; days: number; amount: number; lowest_current: number; lowest_with_plan: number; prob_short_current: number; prob_short_with_plan: number }
+  path: MilestonePoint[]
+}
+export interface FutureSelfAnswer {
+  question: string; source: 'ai' | 'rules'; answer: string
+  interpretation: { restatement: string; horizon_months: number; extra_debt_payment: number; changes: { type: string; category: string | null; change_pct: number | null; amount: number | null; label: string | null; date: string | null }[] }
+  at_horizon: { month: string; date: string; balance_current: number; balance_new: number; debt_current: number; debt_new: number } | null
+  risk_90d: { current: number; new: number }
+  debt: { date_current: string | null; date_new: string | null; interest_current: number | null; interest_new: number | null } | null
+  path: { month: string; date: string; balance_current: number; balance_new: number; debt_current: number; debt_new: number }[]
+}

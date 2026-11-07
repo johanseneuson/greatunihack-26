@@ -152,6 +152,7 @@ def run_forecast(
     sims: int = 1000,
     adjustments: list[Adjustment] | None = None,
     seed: int | None = None,
+    timing_jitter: bool = True,
 ) -> ForecastResult:
     adjustments = [Adjustment(**a) for a in ctx.standing] + list(adjustments or [])  # standing app decisions + what-if changes
     rng = np.random.default_rng(seed if seed is not None else ctx.user.id * 7919 + 17)
@@ -182,10 +183,15 @@ def run_forecast(
         if s.direction == "in":
             have_recurring_income = True
         noise_sd = min(s.amount_cv, 0.25) * s.amount
+        target = inflows if s.direction == "in" else outflows
         for d in s.schedule(start, end):
             i = (d - start).days
             amt = np.maximum(0, s.amount * mult + rng.normal(0, noise_sd, S)) if noise_sd else np.full(S, s.amount * mult)
-            (inflows if s.direction == "in" else outflows)[:, i] += amt
+            if s.timing_sd >= 0.5 and timing_jitter:  # bills don't always land on the exact day
+                days = np.clip(i + np.clip(np.rint(rng.normal(0, s.timing_sd, S)), -3, 3).astype(int), 0, H - 1)
+                np.add.at(target, (np.arange(S), days), amt)
+            else:
+                target[:, i] += amt
             scheduled.append({"date": d.date().isoformat(), "name": s.name, "category": s.category,
                               "amount": round(s.amount * mult * (1 if s.direction == "in" else -1), 2),
                               "kind": "income" if s.direction == "in" else "bill", "series_id": s.id,

@@ -1,5 +1,6 @@
 """Composes the individual analytics into the payloads served by the API."""
 from ...config import settings
+from .backtest import backtest
 from .budget import build_budget
 from .context import UserContext
 from .forecast import ForecastResult, baseline_forecast
@@ -38,6 +39,11 @@ def resilience(ctx: UserContext) -> dict:
 
 def moves(ctx: UserContext) -> list[dict]:
     return _memo(ctx, "moves", lambda: smart_moves(ctx, forecast(ctx)))
+
+
+def accuracy(ctx: UserContext) -> dict | None:
+    """How well the forecast predicted the user's last 12 weeks when those weeks were hidden from it."""
+    return _memo(ctx, "accuracy", lambda: backtest(ctx))
 
 
 def time_travel(ctx: UserContext) -> dict:

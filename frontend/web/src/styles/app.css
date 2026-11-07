@@ -260,3 +260,9 @@ input[type='range'] { width: 100%; accent-color: var(--primary); }
 }
 .range-tabs button:hover { color: var(--text); }
 .range-tabs button.on { background: var(--primary-soft); color: var(--primary); }
+.accuracy-note {
+  display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface-2); font-size: 13px; color: var(--text-muted);
+}
+.accuracy-note svg { color: var(--success); flex-shrink: 0; margin-top: 1px; }
+.accuracy-note strong { color: var(--text); }

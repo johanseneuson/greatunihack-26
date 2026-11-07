@@ -50,7 +50,7 @@ def _plural(n: int, word: str) -> str:
     return f"{n} {word}{'' if n == 1 else 's'}"
 
 
-def detect_waves(ctx: UserContext, fc: ForecastResult, weeks_ahead: int = 26) -> dict:
+def detect_waves(ctx: UserContext, fc: ForecastResult, weeks_ahead: int = 53) -> dict:
     empty = {"measure": "variable_spending", "baseline_weekly": 0, "series": [], "past_waves": [], "upcoming_waves": [],
              "seasonal_peaks": []}
     if not ctx.has_data:
@@ -101,17 +101,24 @@ def detect_waves(ctx: UserContext, fc: ForecastResult, weeks_ahead: int = 26) ->
         frequent = float(-in_week[regular]["amount"].sum()) if len(in_week) else 0.0
         weekly_var = fc.outflows[:, cols].sum(axis=1) - frequent
         weeks.append((w_start, w_end, in_week, in_week[~regular] if len(in_week) else in_week, frequent,
-                      float(np.median(weekly_var)), float(np.percentile(weekly_var, 90))))
+                      float(np.median(weekly_var)), float(np.percentile(weekly_var, 90)),
+                      float(np.percentile(weekly_var, 10))))
     normal_week = float(np.median([wk_[5] for wk_ in weeks])) if weeks else 0.0
 
     upcoming, fut_series = [], []
-    for w_start, w_end, in_week, infrequent, frequent, med, p90 in weeks[:weeks_ahead]:
+    for w_start, w_end, in_week, infrequent, frequent, med, p90, p10 in weeks[:weeks_ahead]:
         extra = med - normal_week
         season = fc.seasonal.get(w_start.month, 1.0)
         # Only forecast waves we can explain: a seasonal peak or a less frequent (quarterly/annual) bill.
         explained = season > 1.05 or len(infrequent) > 0
         is_wave = bool(normal_week and explained and extra > max(40.0, 0.12 * normal_week))
-        fut_series.append({"week_start": w_start.date().isoformat(), "outflow": round(med, 2), "p90": round(p90, 2),
+        paydays = ([e["date"] for e in fc.scheduled if e["kind"] == "income"
+                    and w_start.date().isoformat() <= e["date"] <= w_end.date().isoformat()])
+        fut_series.append({"week_start": w_start.date().isoformat(), "week_end": w_end.date().isoformat(),
+                           "outflow": round(med, 2), "p10": round(p10, 2), "p90": round(p90, 2),
+                           "payday": paydays[0] if paydays else None,
+                           "bills": [{"date": b["date"], "name": b["name"], "amount": b["amount"]}
+                                     for b in in_week.sort_values("date").to_dict("records")] if len(in_week) else [],
                            "baseline": round(normal_week, 2), "is_wave": is_wave, "kind": "forecast"})
         if not is_wave:
             continue

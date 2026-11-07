@@ -45,6 +45,11 @@ def forecast(
     return {"summary": fc.summary(), "daily": fc.daily(step), "monthly": fc.monthly(), "scheduled": fc.scheduled}
 
 
+@router.get("/forecast-accuracy", summary="Backtest: forecast vs what really happened over the last 12 weeks")
+def forecast_accuracy(ctx: UserContext = Depends(get_ctx)):
+    return ins.accuracy(ctx)
+
+
 @router.get("/waves", summary="Past and upcoming spending waves + seasonal peaks")
 def waves(ctx: UserContext = Depends(get_ctx)):
     return ins.waves(ctx)

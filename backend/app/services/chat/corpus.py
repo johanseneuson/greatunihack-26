@@ -81,8 +81,9 @@ def build_docs(ctx: UserContext, db: Session) -> list[dict]:
 
     u = ctx.user
     goals = "; ".join(f"{g.name}: saved {gbp(g.saved_amount)} of {gbp(g.target_amount)}" + (f", target {day(g.target_date)}" if g.target_date else "") for g in u.goals)
+    group = f" This is a GROUP of {u.household_size} people sharing one account: address them as '{u.address_as}', say 'you guys' and 'your flat', never use one person's name." if u.address_as else ""
     add("profile", "About the user",
-        f"Name {u.name}. Income type: {u.income_type}. Housing: {u.housing}. Household size {u.household_size}, dependents {u.dependents}. "
+        f"Name {u.name}.{group} Income type: {u.income_type}. Housing: {u.housing}. Household size {u.household_size}, dependents {u.dependents}. "
         f"Challenges: {', '.join(u.challenges) or 'none stated'}. Notes: {u.notes or 'none'}. Goals: {goals or 'none yet'}.", core=True)
 
     if not ctx.has_data:
@@ -123,7 +124,10 @@ def build_docs(ctx: UserContext, db: Session) -> list[dict]:
 
     add("account", "Warnings", "\n".join(f"[{w['severity']}] {w['title']}: {w['message']} Action: {w.get('action') or '-'}" for w in ins.warnings(ctx)[:8]) or "None.", core=True)
 
-    add("account", "Support she may be eligible for (real UK schemes)", support_doc(support_options(ctx)), core=True)
+    nrpf = "no_recourse_to_public_funds" in (ctx.user.challenges or [])
+    note = ("\nIMPORTANT: they are on Student visas with no recourse to public funds. Do NOT suggest Universal Credit, Housing Benefit, Help to Save, "
+            "Warm Home Discount or social tariffs: they probably cannot get them. Say so kindly if asked, then give the options above." if nrpf else "")
+    add("account", "Support they may be eligible for (real UK schemes)", support_doc(support_options(ctx)) + note, core=True)
 
     add("account", "Budget by category",
         "\n".join(f"{c['category']} ({c['group']}): average {gbp(c['avg_monthly'])} a month, suggested limit {gbp(c['suggested_limit'])}, spent this month {gbp(c['spent_this_month'])}"

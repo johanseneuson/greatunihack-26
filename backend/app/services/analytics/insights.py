@@ -61,7 +61,8 @@ def overview(ctx: UserContext) -> dict:
     u = ctx.user
     return {
         "user": {"id": u.id, "name": u.name, "income_type": u.income_type, "housing": u.housing,
-                 "household_size": u.household_size, "dependents": u.dependents, "challenges": u.challenges or []},
+                 "household_size": u.household_size, "dependents": u.dependents, "challenges": u.challenges or [],
+                 "address_as": u.address_as},
         "as_of": ctx.as_of.date().isoformat(),
         "history_days": ctx.history_days,
         "transactions": int(len(ctx.df)),

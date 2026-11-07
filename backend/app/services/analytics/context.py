@@ -37,6 +37,7 @@ class ProfileSnapshot:
     challenges: list
     notes: str | None
     goals: tuple[GoalSnapshot, ...]
+    address_as: str | None = None
 
     @classmethod
     def of(cls, u: User) -> "ProfileSnapshot":
@@ -46,6 +47,7 @@ class ProfileSnapshot:
             dependents=u.dependents or 0, current_balance=u.current_balance, savings_buffer_target=u.savings_buffer_target,
             challenges=list(u.challenges or []), notes=u.notes,
             goals=tuple(GoalSnapshot(g.id, g.name, g.target_amount, g.saved_amount or 0.0, g.target_date) for g in u.goals),
+            address_as=u.address_as,
         )
 
 

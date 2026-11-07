@@ -128,7 +128,7 @@ def seed_maya(db: Session) -> bool:
     rows, net = _maya_rows()
     import_rows(db, user, rows, source="demo-maya", provider="demo")
     acc = db.scalar(select(Account).where(Account.user_id == user.id))
-    acc.opening_balance = round(23.16 - net, 2)  # ends the history with £23.16 in the account
+    acc.opening_balance = round(123.16 - net, 2)  # ends the history with £123.16 in the account
     db.add_all([Goal(user_id=user.id, name="£300 emergency buffer", target_amount=300, saved_amount=0, target_date=date.today() + timedelta(days=150)),
                 Goal(user_id=user.id, name="Clear Klarna", target_amount=210, saved_amount=0, target_date=date.today() + timedelta(days=180))])
     db.commit()

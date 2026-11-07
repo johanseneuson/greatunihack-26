@@ -55,7 +55,7 @@ function Newsfeed({ d }: { d: Dashboard }) {
             {dayMonth(wave.start)} – {dayMonth(wave.end)} you spent <strong>{money0(wave.excess_over_normal)}</strong> more than usual
             {wave.drivers.length > 0 && <>, mostly on {wave.drivers.map((x) => x.category).join(', ')}</>}.
           </p>
-          <Link to="/waves" className="card-link" style={{ marginTop: 10 }}>See waves ›</Link>
+          <Link to="/future" className="card-link" style={{ marginTop: 10 }}>See waves ›</Link>
         </Card>
       )}
 

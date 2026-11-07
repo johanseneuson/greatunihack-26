@@ -9,8 +9,7 @@ import type { Dashboard } from './lib/types'
 // Pages are code-split so the first screen loads fast (charts are heavy).
 const Home = lazy(() => import('./pages/Home'))
 const Spending = lazy(() => import('./pages/Spending'))
-const Waves = lazy(() => import('./pages/Waves'))
-const Future = lazy(() => import('./pages/Future'))
+const Future = lazy(() => import('./pages/Future')) // Future tab: forecast tracker + spending waves
 const Coach = lazy(() => import('./pages/Coach'))
 const Profile = lazy(() => import('./pages/Profile'))
 
@@ -43,8 +42,8 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<WithData page={Home} />} />
             <Route path="spending" element={<WithData page={Spending} />} />
-            <Route path="waves" element={<WithData page={Waves} />} />
             <Route path="future" element={<WithData page={Future} />} />
+            <Route path="waves" element={<Navigate to="/future" replace />} />
             <Route path="coach" element={<WithData page={Coach} />} />
             <Route path="profile" element={<Suspense fallback={<Loading />}><Profile /></Suspense>} />
             <Route path="*" element={<Navigate to="/" replace />} />

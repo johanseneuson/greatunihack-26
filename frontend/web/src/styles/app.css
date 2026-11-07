@@ -61,7 +61,7 @@ main.content { min-width: 0; padding-bottom: 40px; }
   .page-head { padding: 16px 0 12px; }
   .page-head .title { flex: 1; text-align: center; font-size: 17px; }
   .bottom-nav {
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
     background: var(--surface); border-top: 1px solid var(--border);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom));

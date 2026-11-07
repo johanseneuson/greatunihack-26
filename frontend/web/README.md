@@ -23,9 +23,8 @@ Vite proxies `/api` to `http://localhost:8000` (override with `VITE_API_PROXY`, 
 |---|---|
 | **Home** | Greeting header, top alert, total balance + safe-to-spend, accounts, coming-up payments, resilience score dial, goals, "Future you" toggle with smart moves |
 | **Spending** | Newsfeed tiles (waves, budget nearly used, last month, creeping categories, subscriptions) · Categories (12-month bars, tap a month for its breakdown) · Budgets (personalised limits, safe to spend, needs/wants/savings split) |
-| **Waves** | Weekly flexible spending: past waves + 26-week forecast, heavy months in the next year, what drove each past wave, seasonal pattern |
-| **Future** | Financial time travel: 1,000-future fan chart, overdraft and surprise-cost odds, snapshots at 1/3/6/12 months, goals, smart moves and a what-if builder (category sliders, income change, one-off costs) |
-| **Assistant** | Chat with Lydia (RAG over your own data, can propose pausing subscriptions, voice calls in 11 languages); early warnings tucked underneath |
+| **Future** | Financial time travel: "Future you" balance tracker that follows your cursor over the 1,000-future forecast (1M/3M/6M/1Y), then spending waves: past surges + 26-week forecast, heavy months in the next year, what drove each past wave, seasonal pattern |
+| **Assistant** | Chat with Lydia (RAG over your own data, can propose pausing subscriptions, tells you which real UK schemes you may be eligible for, voice calls in 11 languages); early warnings tucked underneath |
 | **Profile & data** | Switch user / add a person, link a sandbox bank, upload a CSV, circumstances form (drives personalisation), goals, light/dark theme |
 
 Responsive: sidebar on desktop, NatWest-style bottom tab bar on phones. Light and dark mode.

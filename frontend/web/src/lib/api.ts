@@ -1,7 +1,7 @@
 // Thin, platform-neutral API client (uses only fetch) - the Expo app can import this unchanged
 // by calling setApiBase('http://<laptop-ip>:8000/api').
 import type {
-  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, ExpensesData, Forecast, Goal, ImportResult, Recurring,
+  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, ExpensesData, Forecast, ForecastAccuracy, Goal, ImportResult, Recurring,
   ScenarioResult, Transaction, User,
 } from './types'
 
@@ -62,6 +62,7 @@ export const api = {
   dashboard: (id: number) => req<Dashboard>(`/users/${id}/insights/dashboard`),
   forecast: (id: number, horizonDays = 365, step = 2) =>
     req<Forecast>(`/users/${id}/insights/forecast?horizon_days=${horizonDays}&step=${step}`),
+  forecastAccuracy: (id: number) => req<ForecastAccuracy | null>(`/users/${id}/insights/forecast-accuracy`),
   recurring: (id: number) => req<Recurring[]>(`/users/${id}/insights/recurring`),
   scenario: (id: number, adjustments: Adjustment[], horizonDays = 365) =>
     req<ScenarioResult>(`/users/${id}/insights/scenarios`, json('POST', { adjustments, horizon_days: horizonDays })),

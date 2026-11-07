@@ -74,7 +74,16 @@ export interface ForecastMonth {
 }
 export interface Forecast { summary: ForecastSummary; daily: DailyPoint[]; monthly?: ForecastMonth[]; scheduled?: ScheduledEvent[]; upcoming?: ScheduledEvent[] }
 
-export interface WaveWeek { week_start: string; outflow: number; baseline: number; is_wave: boolean; kind: 'history' | 'forecast'; p90?: number }
+export interface WaveWeek {
+  week_start: string; outflow: number; baseline: number; is_wave: boolean; kind: 'history' | 'forecast'
+  // forecast weeks only
+  week_end?: string; p10?: number; p90?: number; payday?: string | null; bills?: { date: string; name: string; amount: number }[]
+}
+export interface ForecastAccuracy {
+  weeks: number; from: string; to: string; mae_weekly: number; naive_mae_weekly: number
+  improvement_vs_naive_pct: number | null; coverage_80: number
+  weekly: { week_start: string; actual: number; forecast: number; p10: number; p90: number }[]
+}
 export interface PastWave {
   start: string; end: string; weeks: number; total_spent: number; excess_over_normal: number; peak_week: string
   drivers: { category: string; excess: number }[]

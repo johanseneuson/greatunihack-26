@@ -87,6 +87,8 @@ history ──► categorise + detect transfers ──► recurring detection (s
 - **Transfers** between the user's own accounts (credit card repayments, pots) are excluded from spending and income.
 - **Waves** are measured on variable spending (regular monthly bills are rhythm, not waves). Past waves use a robust rolling-median baseline; forecast waves are only reported when there's a reason (a seasonal peak or a less frequent bill).
 - **Scenarios** reuse the baseline's random seed, so a difference comes from the change itself, not from random noise.
+- **Bills on their real dates:** monthly, quarterly and yearly payments are anchored to their usual day of the month (rolled to Monday if they never land on a weekend), with a day or two of timing uncertainty learned from history.
+- **Backtested:** `GET /insights/forecast-accuracy` hides the last 12 weeks, forecasts them and compares with reality (error per week, vs a "use your average week" baseline, and how often the 80% range caught the real week). Calendar anchoring + timing spread cut Alex's weekly error from £361 to £350 and raised the 80% range hit rate from 62% to 72% across six test windows; pay-cycle matching and block sampling were tried and dropped because they didn't help.
 - **Personalisation:** income type, dependents and challenges change the safety buffer, savings target and resilience scoring. Declared income or balance in the profile is used when the data doesn't show it.
 
 ## Project layout

@@ -1,4 +1,4 @@
-import { ChartNoAxesColumn, House, MessageCircleHeart, Phone, Settings, Telescope, Waves } from 'lucide-react'
+import { ChartNoAxesColumn, House, MessageCircleHeart, Phone, Settings, Telescope } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
@@ -9,7 +9,6 @@ import { initials } from '../lib/format'
 export const NAV = [
   { to: '/', label: 'Home', icon: House },
   { to: '/spending', label: 'Spending', icon: ChartNoAxesColumn },
-  { to: '/waves', label: 'Waves', icon: Waves },
   { to: '/future', label: 'Future', icon: Telescope },
   { to: '/assistant', label: 'Assistant', icon: MessageCircleHeart },
 ]

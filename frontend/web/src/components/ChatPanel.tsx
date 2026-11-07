@@ -4,7 +4,9 @@ import { LANGUAGES, useChat, type Msg } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { BOT_ABOUT, BOT_NAME } from '../lib/brand'
 import { callName } from '../lib/format'
+import type { SupportOption } from '../lib/types'
 import { phrases } from '../lib/phrases'
+import { ApplySheet } from './ApplySheet'
 import { Spinner } from './ui'
 
 const SUGGESTIONS = ['What help can we get?', 'We need to cut a streaming service', 'Help us write to the hardship fund', 'Will we run out of money?']
@@ -18,6 +20,7 @@ function linkify(text: string) {
 
 function Bubble({ m }: { m: Msg }) {
   const { runAction, decline } = useChat()
+  const [applying, setApplying] = useState<SupportOption | null>(null)
   return (
     <>
       <div className={`msg ${m.role === 'user' ? 'me' : 'bot'}`}>
@@ -32,6 +35,14 @@ function Bubble({ m }: { m: Msg }) {
           </details>
         )}
       </div>
+      {m.applications && m.applications.length > 0 && (
+        <div className="apply-row">
+          {m.applications.map((o) => (
+            <button key={o.id} className="btn apply-btn" onClick={() => setApplying(o)}><Send size={14} /> Apply: {o.name}</button>
+          ))}
+        </div>
+      )}
+      {applying && <ApplySheet option={applying} onClose={() => setApplying(null)} />}
       {m.actions?.map((a, i) => (
         <div key={i} className="msg action">
           <div style={{ fontWeight: 600, marginBottom: 8 }}>{a.label}</div>

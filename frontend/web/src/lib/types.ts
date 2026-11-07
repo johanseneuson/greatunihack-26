@@ -195,6 +195,7 @@ export interface ProposedAction { action: Record<string, unknown>; label: string
 export interface ChatSource { n: number; kind: string; title: string }
 export interface ChatReply {
   reply: string; sources: ChatSource[]; mode: 'llm' | 'offline'; grounded?: boolean; actions: ProposedAction[]
+  applications?: SupportOption[]
 }
 export interface UpcomingItem {
   date: string; name: string; amount: number; kind: 'income' | 'bill' | 'planned'; essential: boolean; in_days: number

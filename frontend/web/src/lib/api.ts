@@ -21,7 +21,7 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
       headers: init.body instanceof FormData ? init.headers : { 'Content-Type': 'application/json', ...init.headers },
     })
   } catch {
-    throw new ApiError(0, "Can't reach the Finance Buddy API. Is the backend running?")
+    throw new ApiError(0, "Can't reach the NatWest API. Is the backend running?")
   }
   if (!res.ok) {
     let msg = res.statusText
@@ -80,7 +80,7 @@ export const api = {
   speak: async (text: string, language: string): Promise<Blob> => {
     let res: Response
     try { res = await fetch(`${BASE}/voice/speak`, { ...json('POST', { text, language }), headers: { 'Content-Type': 'application/json' } }) }
-    catch { throw new ApiError(0, "Can't reach the Finance Buddy API.") }
+    catch { throw new ApiError(0, "Can't reach the NatWest API.") }
     if (!res.ok) throw new ApiError(res.status, 'Voice unavailable')
     return res.blob()
   },

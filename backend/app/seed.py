@@ -119,7 +119,7 @@ def seed_maya(db: Session) -> bool:
     user = User(
         name="Maya Rahman", email=MAYA_EMAIL, income_type="irregular", housing="rent", household_size=3, dependents=0,
         challenges=["irregular_income", "debt", "sends_money_home", "struggling_to_save"],
-        notes="Retail assistant on a flexible-hours contract, paid weekly and it varies with shifts. Rents a room in a shared flat. "
+        notes="24 years old, lives in Manchester. Retail assistant on a flexible-hours contract, paid weekly and it varies with shifts. Rents a room in a shared flat. "
               "Sends £40 a month to family abroad. Uses her overdraft most months and has a Klarna plan. Finds money stressful and "
               "wants plain, practical help.",
     )
@@ -128,7 +128,7 @@ def seed_maya(db: Session) -> bool:
     rows, net = _maya_rows()
     import_rows(db, user, rows, source="demo-maya", provider="demo")
     acc = db.scalar(select(Account).where(Account.user_id == user.id))
-    acc.opening_balance = round(23.16 - net, 2)  # ends the history with £23.16 in the account
+    acc.opening_balance = round(123.16 - net, 2)  # ends the history with £123.16 in the account
     db.add_all([Goal(user_id=user.id, name="£300 emergency buffer", target_amount=300, saved_amount=0, target_date=date.today() + timedelta(days=150)),
                 Goal(user_id=user.id, name="Clear Klarna", target_amount=210, saved_amount=0, target_date=date.today() + timedelta(days=180))])
     db.commit()

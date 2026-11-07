@@ -5,15 +5,14 @@ import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import { BOT_NAME } from '../lib/brand'
 import { firstName } from '../lib/format'
+import { isNo, isYes, phrases } from '../lib/phrases'
 import type { ProposedAction } from '../lib/types'
 
-// Call mode: talk to Finance Buddy hands-free. Browser speech recognition listens, the same grounded assistant answers in a
+// Call mode: talk to the assistant hands-free. Browser speech recognition listens, the same grounded assistant answers in a
 // short spoken style, and ElevenLabs speaks the reply (through the backend; the browser voice is the fallback).
 type Phase = 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error'
 const STATUS: Record<Phase, string> = { connecting: 'Connecting…', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking · tap to interrupt', error: 'Call not available' }
-const CODES: Record<string, string> = { English: 'en-GB', Español: 'es-ES', Polski: 'pl-PL', Português: 'pt-PT', Français: 'fr-FR', العربية: 'ar-SA', Română: 'ro-RO', 'Bengali (বাংলা)': 'bn-BD', 'Urdu (اردو)': 'ur-PK' }
-const YES = /^\s*(yes|yeah|yep|yup|sure|ok|okay|do it|go ahead|please do|confirm|sounds good|s[ií]|vale|claro|tak|oui|d'accord|sim|pode)\b/i
-const NO = /^\s*(no|nope|nah|don't|do not|cancel that|leave it|not now|never mind|nie|non|n[aã]o)\b/i
+const CODES: Record<string, string> = { English: 'en-GB', Español: 'es-ES', Polski: 'pl-PL', Português: 'pt-PT', Français: 'fr-FR', Italiano: 'it-IT', Română: 'ro-RO', العربية: 'ar-SA', हिन्दी: 'hi-IN', 'Bengali (বাংলা)': 'bn-BD', 'Urdu (اردو)': 'ur-PK' }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -138,16 +137,16 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
       const p = s.pending
       if (p) {
         setPend(null)
-        if (YES.test(text)) return confirm(p)
-        if (NO.test(text)) { chatRef.current.decline(p); return say("No problem, I'll leave it.") }
+        if (isYes(text)) return confirm(p)
+        if (isNo(text)) { chatRef.current.decline(p); return say(phrases(lang()).leave) }
         chatRef.current.decline(p) // they moved on to something else
       }
       const r = await chatRef.current.ask(text, { voice: true })
       if (!alive) return
-      if (!r) return say('Sorry, I lost the connection for a second. Could you say that again?')
+      if (!r) return say(phrases(lang()).lost)
       const a = r.actions[0]
       if (a) setPend(a)
-      await say(a && !/\?\s*$/.test(r.reply) ? r.reply + ' Shall I go ahead?' : r.reply)
+      await say(a && !/[?؟？]\s*$/.test(r.reply) ? `${r.reply} ${phrases(lang()).ahead}` : r.reply)
     }
 
     ctl.current = {
@@ -158,7 +157,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
         else if (s.phase === 'listening') listen()
       },
       yes: () => { const p = s.pending; if (!p) return; setPend(null); stopListening(); s.gen++; stopSpeaking(); void confirm(p) },
-      no: () => { const p = s.pending; if (!p) return; setPend(null); stopListening(); s.gen++; stopSpeaking(); chatRef.current.decline(p); void say("No problem, I'll leave it.") },
+      no: () => { const p = s.pending; if (!p) return; setPend(null); stopListening(); s.gen++; stopSpeaking(); chatRef.current.decline(p); void say(phrases(lang()).leave) },
     }
 
     ;(async () => {
@@ -166,7 +165,7 @@ export function CallOverlay({ onClose }: { onClose: () => void }) {
       try { s.eleven = (await api.voiceStatus()).elevenlabs } catch { s.eleven = false }
       try { await openMic() } catch { return alive ? fail('I could not use the microphone. Allow it in the address bar and try again.') : undefined }
       if (!alive) return
-      await say(`Hi ${name.current}, it's ${BOT_NAME}. What's on your mind?`)
+      await say(phrases(lang()).greet(name.current, BOT_NAME))
     })()
 
     return () => {

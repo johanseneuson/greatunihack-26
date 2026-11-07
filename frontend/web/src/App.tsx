@@ -10,7 +10,7 @@ import type { Dashboard } from './lib/types'
 const Home = lazy(() => import('./pages/Home'))
 const Spending = lazy(() => import('./pages/Spending'))
 const Future = lazy(() => import('./pages/Future')) // Future tab: forecast tracker + spending waves
-const Coach = lazy(() => import('./pages/Coach'))
+const Assistant = lazy(() => import('./pages/Assistant'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 /** Renders a page once the dashboard is loaded; handles loading, errors and users with no data yet. */
@@ -43,8 +43,9 @@ export default function App() {
             <Route index element={<WithData page={Home} />} />
             <Route path="spending" element={<WithData page={Spending} />} />
             <Route path="future" element={<WithData page={Future} />} />
+            <Route path="assistant" element={<WithData page={Assistant} />} />
+            <Route path="coach" element={<Navigate to="/assistant" replace />} />
             <Route path="waves" element={<Navigate to="/future" replace />} />
-            <Route path="coach" element={<WithData page={Coach} />} />
             <Route path="profile" element={<Suspense fallback={<Loading />}><Profile /></Suspense>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

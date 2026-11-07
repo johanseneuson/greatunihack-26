@@ -12,6 +12,7 @@ from ...models import PausedSeries, PlannedExpense
 from ..analytics import insights as ins
 from ..analytics.context import UserContext
 from ..analytics.history import monthly_cashflow
+from .support import support_doc, support_options
 
 KB_DIR = BASE_DIR / "data" / "knowledge"
 
@@ -121,6 +122,8 @@ def build_docs(ctx: UserContext, db: Session) -> list[dict]:
         "\n".join(f"planned_id={p.id} {day(p.date)} {p.description} {gbp(p.amount)}{' (essential)' if p.essential else ''}" for p in planned) or "None planned.", core=True)
 
     add("account", "Warnings", "\n".join(f"[{w['severity']}] {w['title']}: {w['message']} Action: {w.get('action') or '-'}" for w in ins.warnings(ctx)[:8]) or "None.", core=True)
+
+    add("account", "Support she may be eligible for (real UK schemes)", support_doc(support_options(ctx)), core=True)
 
     add("account", "Budget by category",
         "\n".join(f"{c['category']} ({c['group']}): average {gbp(c['avg_monthly'])} a month, suggested limit {gbp(c['suggested_limit'])}, spent this month {gbp(c['spent_this_month'])}"

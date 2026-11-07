@@ -2,18 +2,17 @@ import { useState } from 'react'
 import { AlertCard } from '../components/AlertCard'
 import { ChatPanel } from '../components/ChatPanel'
 import { PageHead, Segmented } from '../components/ui'
-import { BOT_NAME } from '../lib/brand'
 import type { Dashboard, Severity } from '../lib/types'
 
 type Filter = 'all' | Severity
 
 /** The chat is the page. Early warnings are tucked underneath for anyone who wants them. */
-export default function Coach({ d }: { d: Dashboard }) {
+export default function Assistant({ d }: { d: Dashboard }) {
   const [filter, setFilter] = useState<Filter>('all')
   const warnings = d.warnings.filter((w) => filter === 'all' || w.severity === filter)
   return (
     <div className="page narrow">
-      <PageHead title={BOT_NAME} />
+      <PageHead title="Assistant" />
       <ChatPanel tall />
       <details className="warn-fold">
         <summary>Early warnings &amp; insights ({d.warnings.length})</summary>

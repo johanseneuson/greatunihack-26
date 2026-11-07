@@ -31,7 +31,7 @@ export default function Profile() {
         <div className="stack">
           <Card className="flush">
             <div className="list">
-              <div className="list-row"><strong>Who's using Finance Buddy?</strong></div>
+              <div className="list-row"><strong>Who's using the app?</strong></div>
               {users.map((u) => (
                 <button key={u.id} className="list-row" onClick={() => setUserId(u.id)}>
                   <span className="avatar">{initials(u.name)}</span>
@@ -162,7 +162,7 @@ function Circumstances({ user, onSaved }: { user: User; onSaved: () => Promise<v
             })}
           </div>
         </div>
-        <label className="field">Anything else your coach should know?
+        <label className="field">Anything else your assistant should know?
           <textarea className="input" rows={3} value={form.notes ?? ''} onChange={(e) => set('notes', e.target.value || null)} maxLength={2000} />
         </label>
         <div className="row">

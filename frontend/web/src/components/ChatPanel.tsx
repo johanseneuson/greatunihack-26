@@ -3,17 +3,24 @@ import { useEffect, useRef, useState } from 'react'
 import { LANGUAGES, useChat, type Msg } from '../context/ChatContext'
 import { useUser } from '../context/UserContext'
 import { BOT_ABOUT, BOT_NAME } from '../lib/brand'
+import { phrases } from '../lib/phrases'
 import { Spinner } from './ui'
 
 const SUGGESTIONS = ['I need to save money. Which subscription should I cancel?', 'Can I afford £20 this week?', 'How do I get to payday?', 'What help can I get?']
 const KIND = { knowledge: 'guidance', profile: 'your profile', account: 'your account', transactions: 'your transactions' } as Record<string, string>
+
+const URL_RX = /(https?:\/\/[^\s)]+)/g
+function linkify(text: string) {
+  return text.split(URL_RX).map((part, i) =>
+    i % 2 === 1 ? <a key={i} href={part} target="_blank" rel="noreferrer noopener">{part.replace(/[.,;]+$/, '')}</a> : part)
+}
 
 function Bubble({ m }: { m: Msg }) {
   const { runAction, decline } = useChat()
   return (
     <>
       <div className={`msg ${m.role === 'user' ? 'me' : 'bot'}`}>
-        {m.text}
+        {linkify(m.text)}
         {m.role === 'assistant' && m.sources && m.sources.length > 0 && (
           <details className="src">
             <summary>What I looked at</summary>
@@ -62,7 +69,9 @@ export function ChatPanel({ tall = false }: { tall?: boolean }) {
       </label>
 
       <div className="chat-log" ref={logRef} role="log" aria-live="polite">
-        <div className="msg bot">Hi {user?.name.split(' ')[0] ?? 'there'}, I'm {BOT_NAME}. I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?</div>
+        <div className="msg bot">{language === 'English'
+          ? `Hi ${user?.name.split(' ')[0] ?? 'there'}, I'm ${BOT_NAME}. I can see your account, your bills and what is coming up, so my advice fits your life. What would you like help with?`
+          : phrases(language).greet(user?.name.split(' ')[0] ?? '', BOT_NAME)}</div>
         {visible.map((m) => <Bubble key={m.id} m={m} />)}
         {busy && <div className="msg bot"><span className="row"><Spinner /><span className="muted small">Thinking…</span></span></div>}
       </div>

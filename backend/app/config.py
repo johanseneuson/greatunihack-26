@@ -31,7 +31,10 @@ class Settings(BaseSettings):
     # Call mode (voice): ElevenLabs text-to-speech. Without a key the browser's built-in voice is used instead.
     elevenlabs_api_key: str | None = None
     elevenlabs_voice_id: str = "ZF6FPAbjXT4488VcRRnw"
-    elevenlabs_model: str = "eleven_flash_v2_5"  # low latency, 32 languages
+    elevenlabs_model: str = "eleven_flash_v2_5"  # English: lowest latency
+    elevenlabs_model_multilingual: str = "eleven_multilingual_v2"  # other major languages: better, more native pronunciation
+    elevenlabs_model_wide: str = "eleven_v3"  # languages the models above lack (Bengali, Urdu)
+    elevenlabs_voices: dict[str, str] = {}  # optional native-speaker voice per language code, e.g. {"es": "<voice id>"}
 
 
 settings = Settings()

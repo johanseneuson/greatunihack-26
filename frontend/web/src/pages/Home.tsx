@@ -1,3 +1,4 @@
+import { BRAND } from '../lib/brand'
 import { ArrowDownLeft, ArrowUpRight, ChevronRight, CircleUserRound, MoreHorizontal, Target, Telescope } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -35,7 +36,7 @@ export default function Home({ d }: { d: Dashboard }) {
           <div className="hero-top">
             <span className="row" style={{ gap: 8, fontWeight: 600 }}>
               <img src="/natwest.svg" alt="NatWest" width={32} height={32} />
-              Finance Buddy
+              {BRAND}
             </span>
             <button className="icon-btn" aria-label="Profile and data" onClick={() => navigate('/profile')}><CircleUserRound size={26} /></button>
           </div>
@@ -49,7 +50,7 @@ export default function Home({ d }: { d: Dashboard }) {
 
       <div className="page stack">
         {top && (
-          <Link to="/coach" className="card row between" style={{ color: 'inherit', zIndex: 1 }}>
+          <Link to="/assistant" className="card row between" style={{ color: 'inherit', zIndex: 1 }}>
             <span className="row" style={{ minWidth: 0 }}>
               <span className={`badge ${top.severity === 'critical' ? 'red' : top.severity === 'warning' ? 'amber' : 'green'}`}>
                 {top.severity === 'positive' ? '✓' : '!'}
@@ -148,7 +149,7 @@ export default function Home({ d }: { d: Dashboard }) {
         )}
 
         <div className="section">
-          <div className="section-title"><h2>For you</h2><Link className="card-link" to="/coach">All insights <ChevronRight size={16} /></Link></div>
+          <div className="section-title"><h2>For you</h2><Link className="card-link" to="/assistant">All insights <ChevronRight size={16} /></Link></div>
           <div className="grid grid-2 collapse">
             {d.warnings.slice(0, 4).map((w) => <AlertCard key={w.id} w={w} />)}
           </div>

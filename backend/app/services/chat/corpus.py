@@ -1,5 +1,6 @@
 """Turns one user's data (profile, balances, forecast, recurring payments, planned expenses, transactions) plus the
 guidance knowledge base into small text documents that the assistant retrieves from."""
+import re
 from functools import lru_cache
 
 import pandas as pd
@@ -36,8 +37,12 @@ def knowledge() -> tuple:
     return tuple(out)
 
 
+FAMILY_SUPPORT = re.compile(r"remit|family|western union|wise|sending money", re.I)
+
+
 def is_essential(series) -> bool:
-    return series.direction == "out" and series.group == "essential"
+    """Bills and commitments the assistant must never cancel for the user (also money sent to family)."""
+    return series.direction == "out" and (series.group == "essential" or bool(FAMILY_SUPPORT.search(series.name)))
 
 
 def load_decisions(ctx: UserContext, db: Session):

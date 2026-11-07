@@ -180,6 +180,26 @@ export interface CoachReply {
   actions: { title: string; detail: string; impact: string }[]; encouragement: string
 }
 
+// ---- Chat assistant (RAG over the user's data) and Expenses ----
+export interface ProposedAction { action: Record<string, unknown>; label: string }
+export interface ChatSource { n: number; kind: string; title: string }
+export interface ChatReply {
+  reply: string; sources: ChatSource[]; mode: 'llm' | 'offline'; grounded?: boolean; actions: ProposedAction[]
+}
+export interface UpcomingItem {
+  date: string; name: string; amount: number; kind: 'income' | 'bill' | 'planned'; essential: boolean; in_days: number
+  series_id?: string; planned_id?: number
+}
+export interface ExpenseSub {
+  series_id: string; name: string; category: string; period: string; amount: number; next_date: string
+  essential: boolean; paused: boolean; kind: 'essential' | 'subscription' | 'income'
+}
+export interface PlannedItem { id: number; date: string; description: string; amount: number; essential: boolean }
+export interface PastItem { date: string; name: string; category: string; amount: number }
+export interface ExpensesData {
+  as_of: string; upcoming: UpcomingItem[]; subscriptions: ExpenseSub[]; planned: PlannedItem[]; past: PastItem[]
+}
+
 export interface Connector { id: string; name: string; description: string }
 export interface ImportResult {
   imported: number; duplicates_skipped: number; accounts: string[]; date_from: string | null; date_to: string | null

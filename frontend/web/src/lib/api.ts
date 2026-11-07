@@ -1,7 +1,7 @@
 // Thin, platform-neutral API client (uses only fetch) - the Expo app can import this unchanged
 // by calling setApiBase('http://<laptop-ip>:8000/api').
 import type {
-  Account, Adjustment, CoachReply, Connector, Dashboard, Forecast, Goal, ImportResult, Recurring,
+  Account, Adjustment, ChatReply, CoachReply, Connector, Dashboard, ExpensesData, Forecast, Goal, ImportResult, Recurring,
   ScenarioResult, Transaction, User,
 } from './types'
 
@@ -66,4 +66,21 @@ export const api = {
   scenario: (id: number, adjustments: Adjustment[], horizonDays = 365) =>
     req<ScenarioResult>(`/users/${id}/insights/scenarios`, json('POST', { adjustments, horizon_days: horizonDays })),
   coach: (id: number, question?: string) => req<CoachReply>(`/users/${id}/insights/coach`, json('POST', { question })),
+
+  // Chat assistant (RAG over the user's own data). Actions only run after the user confirms them.
+  chat: (id: number, body: { messages: { role: 'user' | 'assistant'; content: string }[]; language: string; plain: boolean; voice?: boolean }) =>
+    req<ChatReply>(`/users/${id}/chat`, json('POST', body)),
+  action: (id: number, action: Record<string, unknown>) =>
+    req<{ ok: boolean; message: string }>(`/users/${id}/actions`, json('POST', { action })),
+  expenses: (id: number) => req<ExpensesData>(`/users/${id}/expenses`),
+
+  // Call mode (voice)
+  voiceStatus: () => req<{ elevenlabs: boolean; voice_id: string }>('/voice/status'),
+  speak: async (text: string, language: string): Promise<Blob> => {
+    let res: Response
+    try { res = await fetch(`${BASE}/voice/speak`, { ...json('POST', { text, language }), headers: { 'Content-Type': 'application/json' } }) }
+    catch { throw new ApiError(0, "Can't reach the Finance Buddy API.") }
+    if (!res.ok) throw new ApiError(res.status, 'Voice unavailable')
+    return res.blob()
+  },
 }

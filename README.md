@@ -1,9 +1,9 @@
-# Finance Buddy (NatWest challenge)
+# NatWest (hackathon project)
 
 Financial Navigator: An AI-Powered Financial Coach for Greater Financial Inclusion and Resilience . Mobile-first web app + FastAPI backend.
 
 - `backend/` FastAPI service: transactions, recurring-payment detection, Monte Carlo "financial time travel" forecast, warnings, budgets, and the **RAG chat assistant** with confirmable actions. See `backend/README.md`.
-- `frontend/web` React + Vite app (Home, Spending incl. Payments, Waves, Future, Coach with chat, Profile). The chat, the Call button (voice) and the Payments tab talk to the backend's assistant endpoints.
+- `frontend/web` React + Vite app (Home, Spending incl. Payments, Waves, Future, Assistant with chat, Profile). The chat, the Call button (voice) and the Payments tab talk to the backend's assistant endpoints.
 
 ## Run
     # 1) backend

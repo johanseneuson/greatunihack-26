@@ -2,7 +2,7 @@ import { ChartNoAxesColumn, House, MessageCircleHeart, Phone, Settings, Telescop
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
-import { BOT_NAME } from '../lib/brand'
+import { BOT_NAME, BRAND } from '../lib/brand'
 import { CallOverlay } from './CallOverlay'
 import { initials } from '../lib/format'
 
@@ -11,7 +11,7 @@ export const NAV = [
   { to: '/spending', label: 'Spending', icon: ChartNoAxesColumn },
   { to: '/waves', label: 'Waves', icon: Waves },
   { to: '/future', label: 'Future', icon: Telescope },
-  { to: '/coach', label: 'Coach', icon: MessageCircleHeart },
+  { to: '/assistant', label: 'Assistant', icon: MessageCircleHeart },
 ]
 
 export function Logo({ size = 34 }: { size?: number }) {
@@ -26,7 +26,7 @@ export function Layout() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="brand"><Logo /> Finance Buddy</div>
+        <div className="brand"><Logo /> {BRAND}</div>
         {NAV.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `side-link ${isActive ? 'active' : ''}`}>
             <Icon size={20} /> {label}

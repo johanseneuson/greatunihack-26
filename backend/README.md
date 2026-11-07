@@ -1,4 +1,4 @@
-# Finance Buddy - Backend
+# NatWest - Backend
 
 FastAPI service that turns a user's transaction history into **personalised budgets** and **financial time travel**: a probabilistic forecast of their future balance that flags hardship and unexpected costs *before* they happen, and shows (positively) what their future looks like.
 
@@ -133,7 +133,7 @@ GET  /api/users/{id}/expenses  upcoming payments, subscriptions (with paused sta
 
 Paused subscriptions (`paused_series`) and planned expenses (`planned_expenses`) are applied to every forecast as standing adjustments (`UserContext.standing`), so the dashboard, warnings and what-ifs all reflect them.
 
-The React web app in `../frontend/web` (run `npm run dev`, http://localhost:5173) calls these endpoints from its Coach chat, Payments tab and Call button. The assistant uses a small model (`CHAT_MODEL`, default `claude-haiku-5-5`). Without an API key the chat falls back to a basic answer built from the same data.
+The React web app in `../frontend/web` (run `npm run dev`, http://localhost:5173) calls these endpoints from its Assistant chat, Payments tab and Call button. The assistant uses a small model (`CHAT_MODEL`, default `claude-haiku-5-5`). Without an API key the chat falls back to a basic answer built from the same data.
 
 ### Call mode (voice)
 The **Call** button (sidebar on desktop, floating button on phones) opens a hands-free conversation: the browser listens (Chrome/Edge speech recognition), the same grounded assistant answers in a short spoken style (`voice: true`), and the reply is spoken with ElevenLabs through `POST /api/voice/speak` (the API key never reaches the browser). Set `ELEVENLABS_API_KEY` (voice and model are configurable: `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`). Without a key the browser's own voice is used. You can talk over the assistant to interrupt it; proposed actions are confirmed by saying yes/no or tapping the buttons.

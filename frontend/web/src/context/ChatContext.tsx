@@ -14,7 +14,7 @@ export interface Msg {
   actions?: ProposedAction[]
 }
 
-export const LANGUAGES = ['English', 'Español', 'Polski', 'Português', 'Français', 'العربية', 'Română', 'Bengali (বাংলা)', 'Urdu (اردو)']
+export const LANGUAGES = ['English', 'Español', 'Polski', 'Português', 'Français', 'Italiano', 'Română', 'العربية', 'हिन्दी', 'Bengali (বাংলা)', 'Urdu (اردو)']
 
 interface Ctx {
   messages: Msg[]

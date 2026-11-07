@@ -1,12 +1,12 @@
-import { Bot, Send, Sparkles } from 'lucide-react'
+import { Bot, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AlertCard } from '../components/AlertCard'
+import { ChatPanel } from '../components/ChatPanel'
 import { Card, PageHead, Segmented, Spinner } from '../components/ui'
 import { useUser } from '../context/UserContext'
 import { api } from '../lib/api'
 import type { CoachReply, Dashboard, Severity } from '../lib/types'
 
-const SUGGESTIONS = ['Can I afford a holiday next month?', 'How do I get through my next spending wave?', 'What should I cut first?']
 type Filter = 'all' | Severity
 
 // Coach replies are cached per user for the session so switching tabs doesn't re-run the model.
@@ -17,14 +17,11 @@ export default function Coach({ d }: { d: Dashboard }) {
   const [reply, setReply] = useState<CoachReply | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [question, setQuestion] = useState('')
-  const [asked, setAsked] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
 
   const ask = async (q?: string) => {
     if (!user) return
     const key = `${user.id}:${version}:${q ?? ''}`
-    setAsked(q ?? null)
     if (cache.has(key)) { setReply(cache.get(key)!); return }
     setBusy(true); setError(null)
     try {
@@ -48,14 +45,10 @@ export default function Coach({ d }: { d: Dashboard }) {
               <span className="row" style={{ gap: 8 }}><span className="ico"><Bot size={18} /></span><h3>Finance Buddy</h3></span>
               {reply && <span className={`badge ${reply.source === 'ai' ? 'purple' : 'teal'}`}>{reply.source === 'ai' ? <><Sparkles size={12} /> AI</> : 'Smart summary'}</span>}
             </div>
-            {asked && <div className="small" style={{ margin: '12px 0 0', padding: '8px 12px', borderRadius: 12, background: 'var(--primary-soft)', marginLeft: 'auto', width: 'fit-content' }}>{asked}</div>}
             {busy && <div className="row" style={{ marginTop: 16 }}><Spinner /><span className="muted small">Looking at your future…</span></div>}
             {error && <p className="neg small">{error}</p>}
             {reply && !busy && (
               <div className="stack" style={{ marginTop: 14, gap: 12 }}>
-                {asked && reply.source === 'rules' && (
-                  <div className="tiny muted">Answering specific questions needs the AI coach (add ANTHROPIC_API_KEY to the backend). Here's your overall picture:</div>
-                )}
                 <h2 style={{ color: 'var(--primary)' }}>{reply.headline}</h2>
                 <p style={{ margin: 0 }}>{reply.summary}</p>
                 <div style={{ padding: 12, borderRadius: 12, background: 'var(--success-soft)' }}>
@@ -88,16 +81,7 @@ export default function Coach({ d }: { d: Dashboard }) {
             )}
           </Card>
 
-          <Card>
-            <form className="row" onSubmit={(e) => { e.preventDefault(); if (question.trim()) { ask(question.trim()); setQuestion('') } }}>
-              <input className="input" placeholder="Ask about your money…" value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={500} />
-              <button className="btn" type="submit" aria-label="Ask" disabled={busy || !question.trim()}><Send size={16} /></button>
-            </form>
-            <div className="chips" style={{ marginTop: 10 }}>
-              {SUGGESTIONS.map((s) => <button key={s} className="chip" onClick={() => ask(s)} disabled={busy}>{s}</button>)}
-            </div>
-            <p className="tiny muted" style={{ marginBottom: 0 }}>Guidance based on your data, not regulated financial advice.</p>
-          </Card>
+          <ChatPanel />
         </div>
 
         <div className="stack">

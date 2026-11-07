@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { ErrorState, Loading } from './components/ui'
+import { ChatProvider } from './context/ChatContext'
 import { UserProvider, useUser } from './context/UserContext'
 import type { Dashboard } from './lib/types'
 
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <UserProvider>
+        <ChatProvider>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<WithData page={Home} />} />
@@ -48,6 +50,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
+        </ChatProvider>
       </UserProvider>
     </BrowserRouter>
   )

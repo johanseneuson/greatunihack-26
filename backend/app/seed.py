@@ -67,6 +67,75 @@ def add_subscriptions(db: Session, user: User, subs: list[tuple], months: int = 
     return import_rows(db, user, pd.DataFrame(rows), source="demo-subscriptions", provider="demo")["imported"]
 
 
+MAYA_EMAIL = "maya@demo.financebuddy"
+
+
+def _maya_rows(days: int = 150) -> tuple[pd.DataFrame, float]:
+    """A realistic statement for a young woman on irregular low pay: weekly wages that don't cover rent, bills, five
+    streaming services and a Klarna plan. Deterministic. Returns (rows, net movement)."""
+    import random
+    rng = random.Random(42)
+    end = date.today() - timedelta(days=1)
+    rows = []
+
+    def add(d, desc, amount):
+        rows.append({"date": pd.Timestamp(d), "description": desc, "amount": round(amount, 2), "raw_category": None, "account": "Current account"})
+
+    for i in range(days):
+        d = end - timedelta(days=days - 1 - i)
+        dom, dow = d.day, d.weekday()
+        if dow == 4:
+            add(d, "Highstreet Retail Ltd wages", rng.uniform(150, 235))
+        monthly = {1: ("Rent - Flat 4", -520), 3: ("Octopus Energy", -48), 12: ("Giffgaff mobile", -16), 18: ("Broadband", -22),
+                   14: ("Klarna", -35), 28: ("WorldRemit - family", -40), 3.1: None}
+        if dom in monthly and monthly[dom]:
+            add(d, *monthly[dom])
+        for day_, name, amt in STREAMING:
+            if dom == day_:
+                add(d, name, -amt)
+        if dom == 28:
+            add(d, "Overdraft interest", -rng.uniform(5.5, 8.0))
+        if rng.random() < 0.6:
+            add(d, rng.choice(["Bus - TfGM", "Tram - Metrolink"]), -rng.uniform(2.5, 6.5))
+        if dow in (0, 3, 5) and rng.random() < 0.85:
+            add(d, rng.choice(["Tesco", "Aldi", "Lidl", "Co-op"]), -rng.uniform(8, 30))
+        if rng.random() < 0.18:
+            add(d, rng.choice(["Greggs", "Costa", "Pret", "Deliveroo"]), -rng.uniform(4, 15))
+        if rng.random() < 0.05:
+            add(d, rng.choice(["Primark", "Boots", "Amazon"]), -rng.uniform(10, 35))
+    df = pd.DataFrame(rows)
+    return df, float(df["amount"].sum())
+
+
+# Five video streaming services (plus music) on a very tight budget: a clear thing for the assistant to help cut.
+STREAMING = [(3, "Netflix", 10.99), (9, "Spotify Premium", 11.99), (11, "Amazon Prime Video", 8.99),
+             (17, "NOW TV Entertainment", 9.99), (21, "Disney Plus", 7.99), (26, "Apple.com/bill Apple TV+", 8.99)]
+
+
+def seed_maya(db: Session) -> bool:
+    """Demo user in real financial difficulty. No network needed."""
+    if db.scalar(select(User).where(User.email == MAYA_EMAIL)):
+        return False
+    user = User(
+        name="Maya Rahman", email=MAYA_EMAIL, income_type="irregular", housing="rent", household_size=3, dependents=0,
+        challenges=["irregular_income", "debt", "sends_money_home", "struggling_to_save"],
+        notes="Retail assistant on a flexible-hours contract, paid weekly and it varies with shifts. Rents a room in a shared flat. "
+              "Sends £40 a month to family abroad. Uses her overdraft most months and has a Klarna plan. Finds money stressful and "
+              "wants plain, practical help.",
+    )
+    db.add(user)
+    db.flush()
+    rows, net = _maya_rows()
+    import_rows(db, user, rows, source="demo-maya", provider="demo")
+    acc = db.scalar(select(Account).where(Account.user_id == user.id))
+    acc.opening_balance = round(23.16 - net, 2)  # ends the history with £23.16 in the account
+    db.add_all([Goal(user_id=user.id, name="£300 emergency buffer", target_amount=300, saved_amount=0, target_date=date.today() + timedelta(days=150)),
+                Goal(user_id=user.id, name="Clear Klarna", target_amount=210, saved_amount=0, target_date=date.today() + timedelta(days=180))])
+    db.commit()
+    log.info("Seeded demo user Maya Rahman")
+    return True
+
+
 def seed(db: Session) -> list[int]:
     created = []
     for spec in DEMO_USERS:
@@ -100,6 +169,7 @@ def seed(db: Session) -> list[int]:
 def seed_safely() -> None:
     db = SessionLocal()
     try:
+        seed_maya(db)  # synthetic, works offline
         seed(db)
         for email, subs in DEMO_SUBSCRIPTIONS.items():  # also tops up databases seeded before this existed
             user = db.scalar(select(User).where(User.email == email))

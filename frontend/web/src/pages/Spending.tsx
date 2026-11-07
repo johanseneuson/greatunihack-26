@@ -5,11 +5,12 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'rechar
 import { CategoryIcon } from '../components/CategoryIcon'
 import { Card, PageHead, Progress, Segmented } from '../components/ui'
 import { useUser } from '../context/UserContext'
+import Payments from './Payments'
 import { api } from '../lib/api'
 import { dayMonth, monthLong, monthShort, money, money0, pct } from '../lib/format'
 import type { Dashboard, Transaction } from '../lib/types'
 
-type Tab = 'newsfeed' | 'categories' | 'budgets'
+type Tab = 'newsfeed' | 'categories' | 'budgets' | 'payments'
 
 export default function Spending({ d }: { d: Dashboard }) {
   const [tab, setTab] = useState<Tab>('newsfeed')
@@ -19,11 +20,12 @@ export default function Spending({ d }: { d: Dashboard }) {
       <Segmented<Tab>
         value={tab}
         onChange={setTab}
-        options={[{ value: 'newsfeed', label: 'Newsfeed' }, { value: 'categories', label: 'Categories' }, { value: 'budgets', label: 'Budgets' }]}
+        options={[{ value: 'newsfeed', label: 'Newsfeed' }, { value: 'categories', label: 'Categories' }, { value: 'budgets', label: 'Budgets' }, { value: 'payments', label: 'Payments' }]}
       />
       {tab === 'newsfeed' && <Newsfeed d={d} />}
       {tab === 'categories' && <Categories d={d} />}
       {tab === 'budgets' && <Budgets d={d} />}
+      {tab === 'payments' && <Payments />}
     </div>
   )
 }

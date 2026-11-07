@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     coach_model: str = "claude-opus-5-5"
     coach_enabled: bool = True
+    assistant_name: str = "Lydia"  # named after Lydia Becker, Manchester suffrage pioneer
     chat_model: str = "claude-haiku-5-5"  # chat assistant (RAG + actions): small and cheap
 
     # Call mode (voice): ElevenLabs text-to-speech. Without a key the browser's built-in voice is used instead.
